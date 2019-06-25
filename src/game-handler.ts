@@ -11,6 +11,7 @@ export class GameHandler {
   ): Promise<Message> {
     const guildID = message.guild.id
     const gameInstance = StateManager.createGameInstance(guildID, gameName)
+    await gameInstance.setup()
     const embed = gameInstance.generateEmbed()
     const sentMessage = getFirstFromPotentialArray(await message.say(embed))
     await this.reactToMessage(sentMessage, gameInstance.emojis)
@@ -24,7 +25,16 @@ export class GameHandler {
     const gameInstance = StateManager.getGameInstance(guildID, gameID)
     gameInstance.update(emoji.name)
     const embed = gameInstance.generateEmbed()
-    return message.edit(embed)
+    message.edit(embed)
+    const status = gameInstance.getStatus()
+    if (status === 'win') {
+      message.channel.send('Congratulations, you win!')
+      StateManager.removeGameInstance(guildID, gameID)
+    } else if (status === 'loss') {
+      message.channel.send('Sorry, you lose!')
+      StateManager.removeGameInstance(guildID, gameID)
+    } else {
+    }
   }
 
   static parseGameID({ embeds }: Message): string {
@@ -32,7 +42,12 @@ export class GameHandler {
       throw new Error('parseGameName(): message is missing embeds!')
     }
     const gameIDRegex = /Puzzle - (?:.*) - ([0-9]{8})/i
-    const gameID = embeds[0].title.match(gameIDRegex)[2]
+    const gameID = embeds[0].title.match(gameIDRegex)[1]
+    if (!gameID) {
+      throw new Error(
+        `parseGameName(): no game ID found in title "${embeds[0].title}"`,
+      )
+    }
     return gameID
   }
 

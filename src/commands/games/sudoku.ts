@@ -1,5 +1,5 @@
 import { Command, CommandoClient, CommandMessage } from 'discord.js-commando'
-import { GameHandler } from '../../game-command-handler'
+import { GameHandler } from '../../game-handler'
 
 export default class SudokuCommand extends Command {
   constructor(client: CommandoClient) {
