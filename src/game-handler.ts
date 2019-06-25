@@ -4,7 +4,10 @@ import { Message, MessageReaction } from 'discord.js'
 import { StateManager } from './state-manager'
 import { getFirstFromPotentialArray } from './helpers'
 
+// This class is just here to organize these functions
 export class GameHandler {
+  // This creates a new game. Hopefully the code is somewhat self-explanatory.
+  // See StateManager if it doesn't make sense.
   static async handleGameCreation(
     message: CommandMessage,
     gameName: string,
@@ -14,10 +17,12 @@ export class GameHandler {
     await gameInstance.setup()
     const embed = gameInstance.generateEmbed()
     const sentMessage = getFirstFromPotentialArray(await message.say(embed))
+    // React to the message with starting emojis
     await this.reactToMessage(sentMessage, gameInstance.emojis)
     return sentMessage
   }
 
+  // Same as above function
   static async handleGameUpdate(messageReaction: MessageReaction) {
     const { message, emoji } = messageReaction
     const guildID = message.guild.id

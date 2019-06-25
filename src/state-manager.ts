@@ -14,6 +14,10 @@ interface GameMap {
   [gameName: string]: { new (gameID: string): Game }
 }
 
+// Stores global state
+// The reason for this is to easily keep track of all games across all guilds
+// in a single object. The state object has a list of game instances, and each
+// game instance is a Game object (see ./game.ts).
 export class StateManager {
   static state: State = {
     gameList: {},
