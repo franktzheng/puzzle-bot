@@ -4,7 +4,7 @@
   "main": "./build/app.js",
   "license": "MIT",
   "scripts": {
-    "start": "node .",
+    "start": "tsc && node .",
     "build": "tsc"
   },
   "dependencies": {

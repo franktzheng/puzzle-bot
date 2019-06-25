@@ -1,4 +1,5 @@
 import { Command, CommandoClient, CommandMessage } from 'discord.js-commando'
+import { GameHandler } from '../../game-command-handler'
 
 export default class SudokuCommand extends Command {
   constructor(client: CommandoClient) {
@@ -11,6 +12,6 @@ export default class SudokuCommand extends Command {
   }
 
   run(message: CommandMessage) {
-    return message.say('This has not been implemented yet!')
+    return GameHandler.handleGameCreation(message, 'Sudoku')
   }
 }
