@@ -22,12 +22,16 @@ export class GameHandler {
     return sentMessage
   }
 
-  // Same as above function
+  // Same as above function but for reaction updates
   static async handleGameUpdate(messageReaction: MessageReaction) {
     const { message, emoji } = messageReaction
     const guildID = message.guild.id
     const gameID = this.parseGameID(message)
     const gameInstance = StateManager.getGameInstance(guildID, gameID)
+    if (!gameInstance) {
+      // game no longer exists
+      return
+    }
     gameInstance.update(emoji.name)
     const embed = gameInstance.generateEmbed()
     message.edit(embed)
@@ -38,7 +42,6 @@ export class GameHandler {
     } else if (status === 'loss') {
       message.channel.send('Sorry, you lose!')
       StateManager.removeGameInstance(guildID, gameID)
-    } else {
     }
   }
 

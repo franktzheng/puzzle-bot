@@ -6,11 +6,12 @@ import { RichEmbed } from 'discord.js'
 // to update the state of the game based on the emoji the user reacted with.
 
 export abstract class Game {
+  startTime = Date.now()
+  constructor(public gameID: string) {}
+
   abstract emojis: string[]
-  abstract startTime: number
   abstract setup(): Promise<void>
   abstract generateEmbed(): RichEmbed
   abstract update(emoji: string): void
   abstract getStatus(): 'win' | 'loss' | 'pending'
-  constructor(public gameID: string) {}
 }

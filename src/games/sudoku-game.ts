@@ -61,7 +61,6 @@ export class SudokuGame extends Game {
   static readonly SIZE = 9
 
   emojis = SUDOKU_EMOJIS
-  startTime = Date.now()
 
   board: SudokuTile[][] | null = null
   userInput: [number, number, number] = [null, null, null]
@@ -69,7 +68,6 @@ export class SudokuGame extends Game {
 
   constructor(gameID: string) {
     super(gameID)
-    this.setup()
   }
 
   async setup() {
