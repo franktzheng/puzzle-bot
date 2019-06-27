@@ -12,7 +12,7 @@ const app = express()
 const PORT = 8080 || process.env.PORT
 app.use(express.static('public'))
 app.get('/', (req, res) => res.send('Test'))
-app.listen(PORT, () => console.log(`app listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`App listening on port ${PORT}`))
 
 const client = new CommandoClient({
   commandPrefix: '?puzzle ',

@@ -55,6 +55,10 @@ export class HangmanGame extends Game {
       const fileName = `hangman_${this.gameID}_${Math.floor(
         Math.random() * 10000000,
       )}.png`
+      if (!fs.existsSync('./public/game-images')) {
+        fs.mkdirSync('./public')
+        fs.mkdirSync('./public/game-images')
+      }
       fs.writeFileSync(`./public/game-images/${fileName}`, buffer)
       this.prevFileName &&
         fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
