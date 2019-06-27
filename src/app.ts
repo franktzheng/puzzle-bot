@@ -9,7 +9,7 @@ config()
 const { DISCORD_BOT_TOKEN } = process.env
 
 const app = express()
-const PORT = 8080 || process.env.PORT
+const PORT = process.env.PORT || 8080
 app.use(express.static('public'))
 app.get('/', (req, res) => res.send('Test'))
 app.listen(PORT, () => console.log(`App listening on port ${PORT}`))
