@@ -8,7 +8,7 @@ config()
 const { DISCORD_BOT_TOKEN } = process.env
 
 const client = new CommandoClient({
-  commandPrefix: '?',
+  commandPrefix: '?puzzle ',
   owner: ['201552205386350595'], // add your user id here
 })
 

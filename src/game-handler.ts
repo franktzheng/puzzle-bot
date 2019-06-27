@@ -1,5 +1,5 @@
 import { CommandMessage } from 'discord.js-commando'
-import { Message, MessageReaction } from 'discord.js'
+import { Message, MessageReaction, RichEmbed } from 'discord.js'
 
 import { StateManager } from './state-manager'
 import { getFirstFromPotentialArray } from './helpers'
@@ -11,14 +11,23 @@ export class GameHandler {
   static async handleGameCreation(
     message: CommandMessage,
     gameName: string,
+    args: any = {},
   ): Promise<Message> {
     const guildID = message.guild.id
-    const gameInstance = StateManager.createGameInstance(guildID, gameName)
+    const gameInstance = StateManager.createGameInstance(
+      guildID,
+      gameName,
+      args,
+    )
+    const loadingEmbed = this.createLoadingEmbed(gameName)
+    const sentMessage = getFirstFromPotentialArray(
+      await message.say(loadingEmbed),
+    )
     await gameInstance.setup()
-    const embed = gameInstance.generateEmbed()
-    const sentMessage = getFirstFromPotentialArray(await message.say(embed))
+    const gameEmbed = gameInstance.generateEmbed()
     // React to the message with starting emojis
     await this.reactToMessage(sentMessage, gameInstance.emojis)
+    sentMessage.edit(gameEmbed)
     return sentMessage
   }
 
@@ -35,19 +44,29 @@ export class GameHandler {
     gameInstance.update(emoji.name)
     const embed = gameInstance.generateEmbed()
     message.edit(embed)
-    const status = gameInstance.getStatus()
+    const { status, prompt } = gameInstance.getStatus()
     if (status === 'win') {
-      message.channel.send('Congratulations, you win!')
+      message.channel.send(prompt || 'Congratulations, you win!')
       StateManager.removeGameInstance(guildID, gameID)
     } else if (status === 'loss') {
-      message.channel.send('Sorry, you lose!')
+      message.channel.send(prompt || 'Sorry, you lose!')
       StateManager.removeGameInstance(guildID, gameID)
     }
+  }
+
+  static createLoadingEmbed(gameName: string) {
+    const embed = new RichEmbed({
+      title: `Puzzle - ${gameName} - Loading...`,
+      description: 'Please be patient while we load your game!',
+    })
+    return embed
   }
 
   static parseGameID({ embeds }: Message): string {
     if (!embeds[0]) {
       throw new Error('parseGameName(): message is missing embeds!')
+    } else if (embeds[0].title.includes('Loading')) {
+      return null
     }
     const gameIDRegex = /Puzzle - (?:.*) - ([0-9]{8})/i
     const gameID = embeds[0].title.match(gameIDRegex)[1]

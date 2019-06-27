@@ -8,10 +8,18 @@ export default class SudokuCommand extends Command {
       group: 'games',
       memberName: 'sudoku',
       description: 'Play a game of Sudoku.',
+      args: [
+        {
+          key: 'difficulty',
+          prompt: 'Please specify a difficulty.',
+          type: 'integer',
+          default: 1,
+        },
+      ],
     })
   }
 
-  run(message: CommandMessage) {
-    return GameHandler.handleGameCreation(message, 'Sudoku')
+  run(message: CommandMessage, { difficulty }: { difficulty: number }) {
+    return GameHandler.handleGameCreation(message, 'Sudoku', { difficulty })
   }
 }

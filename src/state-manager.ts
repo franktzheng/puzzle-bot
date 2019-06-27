@@ -11,7 +11,7 @@ interface State {
 }
 
 interface GameMap {
-  [gameName: string]: { new (gameID: string): Game }
+  [gameName: string]: { new (...args: any[]): Game }
 }
 
 // Stores global state
@@ -29,13 +29,17 @@ export class StateManager {
     Hangman: HangmanGame,
   }
 
-  static createGameInstance(guildID: string, gameName: string): Game {
+  static createGameInstance(
+    guildID: string,
+    gameName: string,
+    args: any = {},
+  ): Game {
     if (!this.state.gameList[guildID]) {
       this.state.gameList[guildID] = {}
     }
     const gameID = (this.state.counter++).toString().padStart(8, '0')
     const GameClass = this.gameMap[gameName]
-    const gameInstance = new GameClass(gameID)
+    const gameInstance = new GameClass(gameID, args)
     this.state.gameList[guildID][gameID] = gameInstance
     return gameInstance
   }

@@ -1,7 +1,7 @@
 import { RichEmbed } from 'discord.js'
 import rp from 'request-promise'
 
-import { Game } from '../game'
+import { Game, GameStatus } from '../game'
 
 const SUDOKU_EMOJIS = [
   '🇦',
@@ -57,6 +57,10 @@ interface SudokuAPIResponse {
   squares: { x: number; y: number; value: number }[]
 }
 
+interface SudokuGameArguments {
+  difficulty: number
+}
+
 export class SudokuGame extends Game {
   static readonly SIZE = 9
 
@@ -66,12 +70,15 @@ export class SudokuGame extends Game {
   userInput: [number, number, number] = [null, null, null]
   inputIndex = 0
 
-  constructor(gameID: string) {
+  difficulty: number
+
+  constructor(gameID: string, { difficulty }: SudokuGameArguments) {
     super(gameID)
+    this.difficulty = difficulty
   }
 
   async setup() {
-    await this.generateBoard(SudokuGame.SIZE)
+    await this.generateBoard(SudokuGame.SIZE, this.difficulty)
   }
 
   // generate image based on current tile and board state
@@ -122,7 +129,7 @@ export class SudokuGame extends Game {
     }
   }
 
-  getStatus() {
+  getStatus(): GameStatus {
     const requiredDigits = [...Array(SudokuGame.SIZE)].map(
       (_value, index) => index + 1,
     )
@@ -140,7 +147,7 @@ export class SudokuGame extends Game {
     for (const row of this.board) {
       const rowSum = getTileSum(row)
       if (rowSum !== correctSum || !containsAllRequiredDigits(row)) {
-        return 'pending'
+        return { status: 'pending' }
       }
     }
 
@@ -151,7 +158,7 @@ export class SudokuGame extends Game {
         col.push(row[c])
       }
       if (getTileSum(col) !== correctSum || !containsAllRequiredDigits(col)) {
-        return 'pending'
+        return { status: 'pending' }
       }
     }
 
@@ -170,31 +177,31 @@ export class SudokuGame extends Game {
           getTileSum(square) !== correctSum ||
           !containsAllRequiredDigits(square)
         ) {
-          return 'pending'
+          return { status: 'pending' }
         }
       }
     }
-    return 'win'
+    return { status: 'win' }
   }
 
   insertValue([r, c]: [number, number], value: number | null) {
     this.board[r][c] = { value, isUserInput: true }
   }
 
-  async fetchData(): Promise<SudokuAPIResponse> {
+  async fetchData(difficulty: number): Promise<SudokuAPIResponse> {
     const res = await rp({
       url: 'http://www.cs.utep.edu/cheon/ws/sudoku/new/',
       qs: {
         size: 9,
-        level: 1,
+        level: difficulty,
       },
     })
     return JSON.parse(res)
   }
 
-  async generateBoard(size: number) {
+  async generateBoard(size: number, difficulty: number) {
     try {
-      const res = await this.fetchData()
+      const res = await this.fetchData(difficulty)
       const board: SudokuTile[][] = [...Array(size)].map(_x =>
         [...Array(size)].map(_y => ({
           value: null,

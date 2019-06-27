@@ -1,6 +1,6 @@
-import { Game } from '../game'
+import { Game, GameStatus } from '../game'
 
-import randomWords from 'random-words'
+import HANGMAN_WORDS from '../data/hangman-words.json'
 import { RichEmbed } from 'discord.js'
 import { chunkArray } from '../helpers'
 
@@ -22,12 +22,15 @@ export class HangmanGame extends Game {
   letterTable: HangmanLetter[][] = []
   selection: [number, number] = [0, 0]
 
-  constructor(gameID: string) {
+  difficulty: number
+
+  constructor(gameID: string, { difficulty }: { difficulty: number }) {
     super(gameID)
+    this.difficulty = difficulty
   }
 
   async setup() {
-    this.word = randomWords().split('')
+    this.word = this.getWord(this.difficulty).split('')
     this.guessedWord = [...Array(this.word.length)].map(() => null)
     this.letterTable = this.generateLetterTable()
   }
@@ -75,13 +78,16 @@ ____|___________`
     })
   }
 
-  getStatus() {
+  getStatus(): GameStatus {
     if (this.numOfWrongAnswers > 5) {
-      return 'loss'
+      return {
+        status: 'loss',
+        prompt: `Sorry, you lose! The word was ${this.word.join('')}`,
+      }
     } else if (this.word.join('') === this.guessedWord.join('')) {
-      return 'win'
+      return { status: 'win' }
     }
-    return 'pending'
+    return { status: 'pending' }
   }
 
   update(emoji: string) {
@@ -130,6 +136,26 @@ ____|___________`
       this.numOfWrongAnswers++
     }
     selectedLetter.isUsed = true
+  }
+
+  getWord(difficulty: number): string {
+    let wordList: string[]
+    switch (difficulty) {
+      case 1:
+        wordList = HANGMAN_WORDS.easy
+        break
+      case 2:
+        wordList = HANGMAN_WORDS.medium
+        break
+
+      case 3:
+        wordList = HANGMAN_WORDS.hard
+        break
+      default:
+        throw new Error('getWord(): invalid hangman difficulty!')
+    }
+    const word = wordList[Math.floor(Math.random() * wordList.length)]
+    return word
   }
 
   generateLetterTable(): HangmanLetter[][] {

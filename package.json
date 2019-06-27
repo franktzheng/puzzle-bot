@@ -14,7 +14,6 @@
     "discord.js": "^11.5.1",
     "discord.js-commando": "^0.10.0",
     "dotenv": "^8.0.0",
-    "random-words": "^1.1.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "typescript": "^3.5.2"
