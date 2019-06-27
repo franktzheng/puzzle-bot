@@ -1,4 +1,4 @@
-import { RichEmbed } from 'discord.js'
+import { RichEmbed, Attachment } from 'discord.js'
 
 // Object to represent a game. Main functions are update() and
 // generateEmbed(). generateEmbed() is called to create an embed to send
@@ -16,7 +16,7 @@ export abstract class Game {
 
   abstract emojis: string[]
   abstract setup(): Promise<void>
-  abstract generateEmbed(): RichEmbed
+  abstract async generateEmbed(): Promise<any>
   abstract update(emoji: string): void
   abstract getStatus(): GameStatus
 }

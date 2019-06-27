@@ -1,11 +1,18 @@
 import { config } from 'dotenv'
 import path from 'path'
+import express from 'express'
 import { CommandoClient } from 'discord.js-commando'
 import { GameHandler } from './game-handler'
 
 // add .env file to process.env
 config()
 const { DISCORD_BOT_TOKEN } = process.env
+
+const app = express()
+const PORT = 8080 || process.env.PORT
+app.use(express.static('public'))
+app.get('/', (req, res) => res.send('Test'))
+app.listen(PORT, () => console.log(`app listening on port ${PORT}`))
 
 const client = new CommandoClient({
   commandPrefix: '?puzzle ',

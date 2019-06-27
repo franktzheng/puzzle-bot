@@ -82,7 +82,7 @@ export class SudokuGame extends Game {
   }
 
   // generate image based on current tile and board state
-  generateEmbed(): RichEmbed {
+  async generateEmbed(): Promise<RichEmbed> {
     if (!this.board) {
       return new RichEmbed({
         title: `Puzzle - Sudoku - ${this.gameID}`,

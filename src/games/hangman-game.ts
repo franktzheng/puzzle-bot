@@ -1,12 +1,15 @@
-import { Game, GameStatus } from '../game'
-
-import HANGMAN_WORDS from '../data/hangman-words.json'
 import { RichEmbed } from 'discord.js'
+import _ from 'lodash'
+import fs from 'fs'
+
+import { Game, GameStatus } from '../game'
+import HANGMAN_WORDS from '../data/hangman-words.json'
 import { chunkArray } from '../helpers'
+import { Render } from '../draw/render'
 
 const HANGMAN_EMOJIS = ['⬅', '⬆', '⬇', '➡', '✅']
 
-interface HangmanLetter {
+export interface HangmanLetter {
   value: string
   isUsed: boolean
 }
@@ -21,12 +24,18 @@ export class HangmanGame extends Game {
   numOfWrongAnswers = 0
   letterTable: HangmanLetter[][] = []
   selection: [number, number] = [0, 0]
+  prevFileName: string = null
+  ascii: boolean = false
 
   difficulty: number
 
-  constructor(gameID: string, { difficulty }: { difficulty: number }) {
+  constructor(
+    gameID: string,
+    { difficulty, ascii }: { difficulty: number; ascii: boolean },
+  ) {
     super(gameID)
     this.difficulty = difficulty
+    this.ascii = ascii
   }
 
   async setup() {
@@ -35,7 +44,33 @@ export class HangmanGame extends Game {
     this.letterTable = this.generateLetterTable()
   }
 
-  generateEmbed(): RichEmbed {
+  async generateEmbed(): Promise<any> {
+    if (!this.ascii) {
+      const buffer = Render.hangman(
+        _.flatten(this.letterTable),
+        this.guessedWord,
+        this.numOfWrongAnswers,
+        this.selection,
+      )
+      const fileName = `hangman_${this.gameID}_${Math.floor(
+        Math.random() * 10000000,
+      )}.png`
+      fs.writeFileSync(`./public/game-images/${fileName}`, buffer)
+      this.prevFileName &&
+        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      this.prevFileName = fileName
+      return {
+        embed: {
+          title: `Puzzle - Hangman - ${this.gameID}`,
+          description:
+            'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
+          image: {
+            url: `${process.env.BASE_URL}/game-images/${fileName}`,
+          },
+        },
+      }
+    }
+
     let letterTable = '|'
     for (let r = 0; r < this.letterTable.length; r++) {
       for (let c = 0; c < this.letterTable[r].length; c++) {
@@ -51,27 +86,23 @@ export class HangmanGame extends Game {
       letterTable += '\n|'
     }
     letterTable = letterTable.slice(0, letterTable.length - 2)
-
     const picture = `
-     _________
-    |         |
-    |         ${this.numOfWrongAnswers > 0 ? 'O' : ' '}
-    |        ${this.numOfWrongAnswers > 2 ? '/' : ' '}${
+       _________
+      |         |
+      |         ${this.numOfWrongAnswers > 0 ? 'O' : ' '}
+      |        ${this.numOfWrongAnswers > 2 ? '/' : ' '}${
       this.numOfWrongAnswers > 1 ? '|' : ' '
     }${this.numOfWrongAnswers > 3 ? '\\' : ' '}
-    |        ${this.numOfWrongAnswers > 4 ? '/' : ' '} ${
+      |        ${this.numOfWrongAnswers > 4 ? '/' : ' '} ${
       this.numOfWrongAnswers > 5 ? '\\' : ' '
     }
-    |
-    |
-____|___________`
-
+      |
+      |
+  ____|____________`
     const guessedWord = this.guessedWord
       .map(letter => (letter ? ` ${letter} ` : '___'))
       .join(' ')
-
     const asciiArt = `\`\`\`\n${letterTable}${picture}\n\n${guessedWord}\`\`\``
-
     return new RichEmbed({
       title: `Puzzle - Hangman - ${this.gameID}`,
       description: asciiArt,
@@ -80,11 +111,15 @@ ____|___________`
 
   getStatus(): GameStatus {
     if (this.numOfWrongAnswers > 5) {
+      this.prevFileName &&
+        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
       return {
         status: 'loss',
-        prompt: `Sorry, you lose! The word was ${this.word.join('')}`,
+        prompt: `Sorry, you lose! The word was "${this.word.join('')}".`,
       }
     } else if (this.word.join('') === this.guessedWord.join('')) {
+      this.prevFileName &&
+        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
       return { status: 'win' }
     }
     return { status: 'pending' }

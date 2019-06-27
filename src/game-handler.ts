@@ -24,10 +24,10 @@ export class GameHandler {
       await message.say(loadingEmbed),
     )
     await gameInstance.setup()
-    const gameEmbed = gameInstance.generateEmbed()
+    const embed = await gameInstance.generateEmbed()
     // React to the message with starting emojis
     await this.reactToMessage(sentMessage, gameInstance.emojis)
-    sentMessage.edit(gameEmbed)
+    sentMessage.edit(embed)
     return sentMessage
   }
 
@@ -42,7 +42,7 @@ export class GameHandler {
       return
     }
     gameInstance.update(emoji.name)
-    const embed = gameInstance.generateEmbed()
+    const embed = await gameInstance.generateEmbed()
     message.edit(embed)
     const { status, prompt } = gameInstance.getStatus()
     if (status === 'win') {
