@@ -185,6 +185,7 @@ export function drawMazeASCII(
   })
   return gridString + '```'
 }
+
 function drawMazeImage(
   mazeGrid: MazeGridTile[][],
   playerCoordinates: [number, number],
@@ -211,6 +212,20 @@ function drawMazeImage(
   Draw.roundRect(ctx, mazeMargin, mazeMargin, width, height, mazeThickness * 3)
   ctx.stroke()
   ctx.closePath()
+
+  ctx.fillStyle = '#2C2F33'
+  ctx.fillRect(
+    0,
+    mazeMargin - mazeThickness,
+    mazeMargin + columnWidth,
+    rowHeight + mazeThickness,
+  )
+  ctx.fillRect(
+    canvas.width - mazeMargin - columnWidth,
+    canvas.height - mazeMargin - rowHeight,
+    mazeMargin + columnWidth,
+    rowHeight + mazeThickness,
+  )
 
   for (let r = 0; r < numOfRows; r++) {
     for (let c = 0; c < numOfColumns; c++) {
