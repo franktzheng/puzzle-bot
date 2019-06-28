@@ -1,5 +1,6 @@
 import { Command, CommandoClient, CommandMessage } from 'discord.js-commando'
 import { GameHandler } from '../../core/game-handler'
+import { getGameDifficultyFromNumber } from '../../core/game'
 
 export default class SudokuCommand extends Command {
   constructor(client: CommandoClient) {
@@ -20,6 +21,8 @@ export default class SudokuCommand extends Command {
   }
 
   run(message: CommandMessage, { difficulty }: { difficulty: number }) {
-    return GameHandler.handleGameCreation(message, 'Sudoku', { difficulty })
+    return GameHandler.handleGameCreation(message, 'Sudoku', {
+      difficulty: getGameDifficultyFromNumber(difficulty),
+    })
   }
 }

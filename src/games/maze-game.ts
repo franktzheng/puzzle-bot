@@ -4,8 +4,8 @@ import Canvas from 'canvas'
 import fs from 'fs'
 
 import { UnionTree, Draw } from '../utils'
-import { Game, GameStatus } from '../core/game'
-import { PuzzleLabel } from '../core/puzzle-label'
+import { Game, GameStatus, GameDifficulty } from '../core/game'
+import { GameTitle } from '../core/game-title'
 
 interface MazeEdge {
   x: number
@@ -18,36 +18,30 @@ interface MazeGridTile {
   fillRight: boolean
 }
 
-const MAZE_SIZES: [number, number][] = [[8, 10], [16, 20], [24, 30]]
+const MAZE_SIZES: { [key in GameDifficulty]: [number, number] } = {
+  easy: [8, 10],
+  medium: [16, 20],
+  hard: [24, 30],
+}
 
 export class MazeGame extends Game {
   emojis = ['⬅', '⬆', '⬇', '➡']
+  name = 'Maze'
 
   size: [number, number]
-  difficulty: number
   mazeGrid: MazeGridTile[][] = []
   playerCoordinates: [number, number] = [0, 0]
   prevFileName: string = null
-  ascii: boolean
-
-  constructor(
-    gameID: string,
-    { difficulty, ascii }: { difficulty: number; ascii: boolean },
-  ) {
-    super(gameID)
-    this.difficulty = difficulty
-    this.ascii = ascii
-  }
 
   async setup() {
-    this.size = MAZE_SIZES[this.difficulty - 1]
+    this.size = MAZE_SIZES[this.difficulty]
     this.mazeGrid = generateMaze(...this.size)
   }
 
   async generateEmbed(): Promise<RichEmbed> {
-    const title = PuzzleLabel.create('Maze', this.difficulty, this.gameID)
+    const title = this.createGameTitle()
 
-    if (this.ascii) {
+    if (this.isASCII) {
       const asciiArt = drawMazeASCII(this.mazeGrid, this.playerCoordinates)
       return new RichEmbed({
         title,

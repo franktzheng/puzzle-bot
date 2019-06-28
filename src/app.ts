@@ -5,14 +5,14 @@ import { CommandoClient } from 'discord.js-commando'
 import signale from 'signale'
 
 import { GameHandler } from './core/game-handler'
-import { Mongo } from './core/mongo'
+import { Database } from './core/database'
 
 // add .env file to process.env
 config()
 const { DISCORD_BOT_TOKEN, MONGO_URI } = process.env
 
 // MongoDB connection
-Mongo.connect(MONGO_URI)
+Database.connect(MONGO_URI)
 
 // Express server for hosting images
 const app = express()

@@ -1,8 +1,8 @@
 import { RichEmbed } from 'discord.js'
 import rp from 'request-promise'
 
-import { Game, GameStatus } from '../core/game'
-import { PuzzleLabel } from '../core/puzzle-label'
+import { Game, GameStatus, GameDifficulty } from '../core/game'
+import { GameTitle } from '../core/game-title'
 
 const SUDOKU_EMOJIS = [
   '🇦',
@@ -58,25 +58,15 @@ interface SudokuAPIResponse {
   squares: { x: number; y: number; value: number }[]
 }
 
-interface SudokuGameArguments {
-  difficulty: number
-}
-
 export class SudokuGame extends Game {
   static readonly SIZE = 9
 
   emojis = SUDOKU_EMOJIS
+  name = 'Maze'
 
   board: SudokuTile[][] | null = null
   userInput: [number, number, number] = [null, null, null]
   inputIndex = 0
-
-  difficulty: number
-
-  constructor(gameID: string, { difficulty }: SudokuGameArguments) {
-    super(gameID)
-    this.difficulty = difficulty
-  }
 
   async setup() {
     this.board = await generateBoard(SudokuGame.SIZE, this.difficulty)
@@ -84,7 +74,7 @@ export class SudokuGame extends Game {
 
   // generate image based on current tile and board state
   async generateEmbed(): Promise<RichEmbed> {
-    const title = PuzzleLabel.create('Maze', this.difficulty, this.gameID)
+    const title = this.createGameTitle()
     const boardString = drawSudokuASCII(this.userInput, this.board)
     return new RichEmbed({
       title,
@@ -171,18 +161,21 @@ export class SudokuGame extends Game {
   }
 }
 
-async function fetchSudokuData(difficulty: number): Promise<SudokuAPIResponse> {
+async function fetchSudokuData(
+  difficulty: GameDifficulty,
+): Promise<SudokuAPIResponse> {
+  const level = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3
   const res = await rp({
     url: 'http://www.cs.utep.edu/cheon/ws/sudoku/new/',
     qs: {
+      level,
       size: 9,
-      level: difficulty,
     },
   })
   return JSON.parse(res)
 }
 
-async function generateBoard(size: number, difficulty: number) {
+async function generateBoard(size: number, difficulty: GameDifficulty) {
   try {
     const res = await fetchSudokuData(difficulty)
     const board: SudokuTile[][] = [...Array(size)].map(_x =>

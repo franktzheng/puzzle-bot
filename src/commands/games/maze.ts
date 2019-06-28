@@ -1,5 +1,6 @@
 import { Command, CommandoClient, CommandMessage } from 'discord.js-commando'
 import { GameHandler } from '../../core/game-handler'
+import { getGameDifficultyFromNumber } from '../../core/game'
 
 export default class MazeCommand extends Command {
   constructor(client: CommandoClient) {
@@ -29,11 +30,11 @@ export default class MazeCommand extends Command {
     message: CommandMessage,
     { difficulty, mode }: { difficulty: number; mode: string },
   ) {
-    const ascii = mode === 'ascii'
+    const isASCII = mode === 'ascii'
 
     return GameHandler.handleGameCreation(message, 'Maze', {
-      difficulty,
-      ascii,
+      isASCII,
+      difficulty: getGameDifficultyFromNumber(difficulty),
     })
   }
 }

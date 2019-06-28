@@ -3,11 +3,10 @@ import _ from 'lodash'
 import fs from 'fs'
 import Canvas from 'canvas'
 
-import { Game, GameStatus } from '../core/game'
+import { Game, GameStatus, GameDifficulty } from '../core/game'
 import HANGMAN_WORDS from '../data/hangman-words.json'
 import { chunkArray } from '../utils/helpers'
 import { Draw } from '../utils/draw'
-import { PuzzleLabel } from '../core/puzzle-label'
 
 const HANGMAN_EMOJIS = ['⬅', '⬆', '⬇', '➡', '✅']
 
@@ -20,6 +19,7 @@ export class HangmanGame extends Game {
   static readonly ROW_SIZE = 5
 
   emojis = HANGMAN_EMOJIS
+  name = 'Hangman'
 
   word: string[] = []
   guessedWord: string[] = []
@@ -27,18 +27,6 @@ export class HangmanGame extends Game {
   letterTable: HangmanLetter[][] = []
   selection: [number, number] = [0, 0]
   prevFileName: string = null
-  ascii: boolean = false
-
-  difficulty: number
-
-  constructor(
-    gameID: string,
-    { difficulty, ascii }: { difficulty: number; ascii: boolean },
-  ) {
-    super(gameID)
-    this.difficulty = difficulty
-    this.ascii = ascii
-  }
 
   async setup() {
     this.word = getWord(this.difficulty).split('')
@@ -47,9 +35,9 @@ export class HangmanGame extends Game {
   }
 
   async generateEmbed(): Promise<RichEmbed> {
-    const title = PuzzleLabel.create('Hangman', this.difficulty, this.gameID)
+    const title = this.createGameTitle()
 
-    if (this.ascii) {
+    if (this.isASCII) {
       const asciiArt = drawHangmanASCII(
         this.letterTable,
         this.selection,
@@ -152,22 +140,8 @@ export class HangmanGame extends Game {
   }
 }
 
-function getWord(difficulty: number): string {
-  let wordList: string[]
-  switch (difficulty) {
-    case 1:
-      wordList = HANGMAN_WORDS.easy
-      break
-    case 2:
-      wordList = HANGMAN_WORDS.medium
-      break
-
-    case 3:
-      wordList = HANGMAN_WORDS.hard
-      break
-    default:
-      throw new Error('getWord(): invalid hangman difficulty!')
-  }
+function getWord(difficulty: GameDifficulty): string {
+  const wordList: string[] = HANGMAN_WORDS[difficulty]
   const word = wordList[Math.floor(Math.random() * wordList.length)]
   return word
 }
