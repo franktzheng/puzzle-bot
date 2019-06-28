@@ -30,3 +30,31 @@ Slow Wi-Fi connection? Play the ASCII version of a game instead by adding `ascii
 * `?puzzle ascii maze <?difficulty>`
 * `?puzzle ascii sudoku <?difficulty>`
 * `?puzzle ascii hangman <?difficulty>`
+
+## Setup
+
+Follow the below steps if you plan to run the bot locally:
+
+1. Clone this repository.
+2. Make sure you have `node` and `npm` installed on your computer. If not, you can install it [here](https://nodejs.org/en/).
+3. Create a file in the base directory called `.env`.
+4. Create a Discord bot. You can do so in [Discord's Developer Portal](https://discordapp.com/developers/applications). Add the following line to `.env`:
+```
+DISCORD_BOT_TOKEN=<your bot token goes here!>
+```
+5. Install `ngrok` from [ngrok.com](https://ngrok.com/). This bot uses `ngrok` to expose `localhost` and use it to host images. Start an `ngrok` server on port 8080. If you have `ngrok` saved as an environment variable, you can run:
+```
+ngrok http 8080
+```
+After your server is started, add the following line to `.env`:
+```
+BASE_URL=<your ngrok url goes here! (i.e. http://173145df.ngrok.io)>
+```
+6. Create a MongoDB database. You can do this either through [Atlas](https://www.mongodb.com/cloud/atlas) or by hosting it locally. Add the connection string to the `.env`:
+```
+MONGO_URI=<your connection string goes here!>
+```
+7. You're good to go! Run the following to start the bot:
+```
+$ npm install && npm start
+```
