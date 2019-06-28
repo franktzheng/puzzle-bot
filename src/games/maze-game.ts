@@ -76,6 +76,8 @@ export class MazeGame extends Game {
       this.playerCoordinates[0] === this.mazeGrid.length - 1 &&
       this.playerCoordinates[1] === this.mazeGrid[0].length - 1
     ) {
+      this.prevFileName &&
+        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
       return { status: 'win' }
     }
     return { status: 'pending' }
