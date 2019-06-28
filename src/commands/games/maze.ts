@@ -27,10 +27,13 @@ export default class MazeCommand extends Command {
 
   run(
     message: CommandMessage,
-    { difficulty }: { difficulty: number; mode: string },
+    { difficulty, mode }: { difficulty: number; mode: string },
   ) {
+    const ascii = mode === 'ascii'
+
     return GameHandler.handleGameCreation(message, 'Maze', {
       difficulty,
+      ascii,
     })
   }
 }

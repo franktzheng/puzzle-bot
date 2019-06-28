@@ -1,7 +1,10 @@
 import _ from 'lodash'
-import { UnionTree } from '../utils'
-import { Game, GameStatus } from '../game'
 import { RichEmbed } from 'discord.js'
+import Canvas from 'canvas'
+import fs from 'fs'
+
+import { UnionTree, Draw } from '../utils'
+import { Game, GameStatus } from '../game'
 
 interface MazeEdge {
   x: number
@@ -23,10 +26,16 @@ export class MazeGame extends Game {
   difficulty: number
   mazeGrid: MazeGridTile[][] = []
   playerCoordinates: [number, number] = [0, 0]
+  prevFileName: string = null
+  ascii: boolean
 
-  constructor(gameID: string, { difficulty }: { difficulty: number }) {
+  constructor(
+    gameID: string,
+    { difficulty, ascii }: { difficulty: number; ascii: boolean },
+  ) {
     super(gameID)
     this.difficulty = difficulty
+    this.ascii = ascii
   }
 
   async setup() {
@@ -35,10 +44,30 @@ export class MazeGame extends Game {
   }
 
   async generateEmbed(): Promise<RichEmbed> {
-    const asciiArt = drawMazeASCII(this.mazeGrid, this.playerCoordinates)
+    if (this.ascii) {
+      const asciiArt = drawMazeASCII(this.mazeGrid, this.playerCoordinates)
+      return new RichEmbed({
+        title: `Puzzle - Maze - ${this.gameID}`,
+        description: asciiArt,
+      })
+    }
+    const buffer = drawMazeImage(this.mazeGrid, this.playerCoordinates)
+    const fileName = `maze_${this.gameID}_${Math.floor(
+      Math.random() * 10000000,
+    )}.png`
+    if (!fs.existsSync('./public/game-images')) {
+      fs.mkdirSync('./public')
+      fs.mkdirSync('./public/game-images')
+    }
+    fs.writeFileSync(`./public/game-images/${fileName}`, buffer)
+    this.prevFileName &&
+      fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+    this.prevFileName = fileName
     return new RichEmbed({
       title: `Puzzle - Maze - ${this.gameID}`,
-      description: asciiArt,
+      description:
+        'Try to reach the end of the maze.\n\nTo play an ASCII version:```?puzzle maze <difficulty> ascii```',
+      image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
     })
   }
 
@@ -155,4 +184,60 @@ export function drawMazeASCII(
     gridString += '\n'
   })
   return gridString + '```'
+}
+function drawMazeImage(
+  mazeGrid: MazeGridTile[][],
+  playerCoordinates: [number, number],
+) {
+  const numOfRows = mazeGrid.length
+  const numOfColumns = mazeGrid[0].length
+
+  const canvas = Canvas.createCanvas(300, 300)
+  const ctx = canvas.getContext('2d')
+
+  ctx.fillStyle = '#2C2F33'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  const mazeMargin = 15
+  const width = canvas.width - mazeMargin * 2
+  const height = canvas.height - mazeMargin * 2
+  const columnWidth = width / numOfColumns
+  const rowHeight = width / numOfRows
+  const mazeThickness = Math.round(20 / numOfRows)
+
+  ctx.strokeStyle = 'white'
+  ctx.lineWidth = mazeThickness
+  ctx.beginPath()
+  Draw.roundRect(ctx, mazeMargin, mazeMargin, width, height, mazeThickness * 3)
+  ctx.stroke()
+  ctx.closePath()
+
+  for (let r = 0; r < numOfRows; r++) {
+    for (let c = 0; c < numOfColumns; c++) {
+      const x = c * columnWidth + mazeMargin
+      const y = r * rowHeight + mazeMargin
+      const gridTile = mazeGrid[r][c]
+      ctx.fillStyle = 'white'
+      if (gridTile.fillBottom && r !== numOfRows - 1) {
+        ctx.fillRect(x, y + rowHeight, columnWidth, mazeThickness)
+      }
+      if (gridTile.fillRight && c !== numOfColumns - 1) {
+        ctx.fillRect(x + columnWidth, y, mazeThickness, rowHeight)
+      }
+      if (r === playerCoordinates[0] && c === playerCoordinates[1]) {
+        ctx.fillStyle = '#7289DA'
+        ctx.beginPath()
+        ctx.arc(
+          x + columnWidth / 2,
+          y + rowHeight / 2,
+          columnWidth / 4,
+          0,
+          2 * Math.PI,
+        )
+        ctx.fill()
+        ctx.closePath()
+      }
+    }
+  }
+  return canvas.toBuffer()
 }

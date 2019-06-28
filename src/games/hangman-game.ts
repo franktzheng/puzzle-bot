@@ -46,41 +46,41 @@ export class HangmanGame extends Game {
   }
 
   async generateEmbed(): Promise<RichEmbed> {
-    if (!this.ascii) {
-      const buffer = drawHangmanImage(
-        _.flatten(this.letterTable),
-        this.guessedWord,
-        this.numOfWrongAnswers,
+    if (this.ascii) {
+      const asciiArt = drawHangmanASCII(
+        this.letterTable,
         this.selection,
+        this.numOfWrongAnswers,
+        this.guessedWord,
       )
-      const fileName = `hangman_${this.gameID}_${Math.floor(
-        Math.random() * 10000000,
-      )}.png`
-      if (!fs.existsSync('./public/game-images')) {
-        fs.mkdirSync('./public')
-        fs.mkdirSync('./public/game-images')
-      }
-      fs.writeFileSync(`./public/game-images/${fileName}`, buffer)
-      this.prevFileName &&
-        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
-      this.prevFileName = fileName
       return new RichEmbed({
         title: `Puzzle - Hangman - ${this.gameID}`,
-        description:
-          'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
-        image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
+        description: asciiArt,
       })
     }
 
-    const asciiArt = drawHangmanASCII(
-      this.letterTable,
-      this.selection,
-      this.numOfWrongAnswers,
+    const buffer = drawHangmanImage(
+      _.flatten(this.letterTable),
       this.guessedWord,
+      this.numOfWrongAnswers,
+      this.selection,
     )
+    const fileName = `hangman_${this.gameID}_${Math.floor(
+      Math.random() * 10000000,
+    )}.png`
+    if (!fs.existsSync('./public/game-images')) {
+      fs.mkdirSync('./public')
+      fs.mkdirSync('./public/game-images')
+    }
+    fs.writeFileSync(`./public/game-images/${fileName}`, buffer)
+    this.prevFileName &&
+      fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+    this.prevFileName = fileName
     return new RichEmbed({
       title: `Puzzle - Hangman - ${this.gameID}`,
-      description: asciiArt,
+      description:
+        'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
+      image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
     })
   }
 
