@@ -5,7 +5,7 @@ import fs from 'fs'
 import { Game, GameStatus } from '../game'
 import HANGMAN_WORDS from '../data/hangman-words.json'
 import { chunkArray } from '../helpers'
-import { Render } from '../draw/render'
+import { Render } from '../utils/render'
 
 const HANGMAN_EMOJIS = ['⬅', '⬆', '⬇', '➡', '✅']
 
