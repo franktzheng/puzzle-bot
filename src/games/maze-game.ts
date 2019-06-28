@@ -5,6 +5,7 @@ import fs from 'fs'
 
 import { UnionTree, Draw } from '../utils'
 import { Game, GameStatus } from '../core/game'
+import { PuzzleLabel } from '../core/puzzle-label'
 
 interface MazeEdge {
   x: number
@@ -44,13 +45,16 @@ export class MazeGame extends Game {
   }
 
   async generateEmbed(): Promise<RichEmbed> {
+    const title = PuzzleLabel.create('Maze', this.difficulty, this.gameID)
+
     if (this.ascii) {
       const asciiArt = drawMazeASCII(this.mazeGrid, this.playerCoordinates)
       return new RichEmbed({
-        title: `Puzzle - Maze - ${this.gameID}`,
+        title,
         description: asciiArt,
       })
     }
+
     const buffer = drawMazeImage(this.mazeGrid, this.playerCoordinates)
     const fileName = `maze_${this.gameID}_${Math.floor(
       Math.random() * 10000000,
@@ -64,7 +68,7 @@ export class MazeGame extends Game {
       fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
     this.prevFileName = fileName
     return new RichEmbed({
-      title: `Puzzle - Maze - ${this.gameID}`,
+      title,
       description:
         'Try to reach the end of the maze.\n\nTo play an ASCII version:```?puzzle maze <difficulty> ascii```',
       image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },

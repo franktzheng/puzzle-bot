@@ -2,6 +2,7 @@ import { RichEmbed } from 'discord.js'
 import rp from 'request-promise'
 
 import { Game, GameStatus } from '../core/game'
+import { PuzzleLabel } from '../core/puzzle-label'
 
 const SUDOKU_EMOJIS = [
   '🇦',
@@ -83,9 +84,10 @@ export class SudokuGame extends Game {
 
   // generate image based on current tile and board state
   async generateEmbed(): Promise<RichEmbed> {
+    const title = PuzzleLabel.create('Maze', this.difficulty, this.gameID)
     const boardString = drawSudokuASCII(this.userInput, this.board)
     return new RichEmbed({
-      title: `Puzzle - Sudoku - ${this.gameID}`,
+      title,
       description: boardString,
     })
   }

@@ -6,6 +6,7 @@ import { StateManager } from './state-manager'
 import { getFirstFromPotentialArray } from '../utils/helpers'
 import { Game } from './game'
 import { Mongo } from './mongo'
+import { PuzzleLabel } from './puzzle-label'
 
 // This class is just here to organize these functions
 export class GameHandler {
@@ -39,7 +40,11 @@ export class GameHandler {
     const { message, emoji } = messageReaction
     const guildID = message.guild.id
 
-    const [gameName, gameID] = parseGameNameAndID(message)
+    const [gameType, gameID] = parseGameTypeAndID(message)
+    if (gameType === null) {
+      // game is loading
+      return
+    }
     const gameInstance = StateManager.getGameInstance(guildID, gameID)
     if (!gameInstance) {
       // game no longer exists
@@ -52,29 +57,23 @@ export class GameHandler {
     if (status === 'win') {
       const elapsedTime = gameInstance.getElapsedTimeInMilliseconds()
       const timeString = formatElapsedTime(elapsedTime)
-      await Mongo.addCompletionTime(guildID, gameName, elapsedTime)
-      await message.channel.send(
-        prompt || `Congratulations, you win! You finished in ${timeString}`,
+      await Mongo.addCompletionTime(guildID, gameType, elapsedTime)
+      await this.sendGameCompletionPrompt(
+        message,
+        prompt || `Congratulations, you win! You finished in ${timeString}.`,
       )
       StateManager.removeGameInstance(guildID, gameID)
     } else if (status === 'loss') {
-      message.channel.send(prompt || 'Sorry, you lose!')
+      await this.sendGameCompletionPrompt(message, prompt || 'Sorry, you lose!')
       StateManager.removeGameInstance(guildID, gameID)
     }
   }
 
-  static async handleGameWin(gameInstance: Game, channel: TextChannel) {
-    const elapsedTime = gameInstance.getElapsedTimeInMilliseconds()
-    const showTimeInSeconds = elapsedTime < 60 * 1000
-    const timeString =
-      moment.utc(elapsedTime).format(showTimeInSeconds ? 's.SSS' : 'm:ss') +
-      ' ' +
-      showTimeInSeconds
-        ? 'seconds'
-        : 'minutes'
-    await channel.send(
-      prompt || `Congratulations, you win! You finished in ${timeString}`,
-    )
+  static async sendGameCompletionPrompt(message: Message, prompt: string) {
+    await message.edit({
+      content: '',
+      embed: { title: message.embeds[0].title, description: prompt },
+    })
   }
 }
 
@@ -91,26 +90,17 @@ function formatElapsedTime(elapsedTimeInMilliseconds: number): string {
 
 function createLoadingEmbed(gameName: string) {
   const embed = new RichEmbed({
-    title: `Puzzle - ${gameName} - Loading...`,
+    title: PuzzleLabel.createLoading(gameName),
     description: 'Please be patient while we load your game!',
   })
   return embed
 }
 
-function parseGameNameAndID({ embeds }: Message): [string, string] {
+function parseGameTypeAndID({ embeds }: Message): [string, string] {
   if (!embeds[0]) {
     throw new Error('parseGameName(): message is missing embeds!')
-  } else if (embeds[0].title.includes('Loading')) {
-    return null
   }
-  const gameIDRegex = /Puzzle - (.*) - ([0-9]{8})/i
-  const [, gameName, gameID] = embeds[0].title.match(gameIDRegex)
-  if (!gameID || !gameName) {
-    throw new Error(
-      `parseGameName(): no game ID or name found in title "${embeds[0].title}"`,
-    )
-  }
-  return [gameName, gameID]
+  return PuzzleLabel.parseGameTypeAndID(embeds[0].title)
 }
 
 async function reactToMessage(message: Message, emojis: string[]) {

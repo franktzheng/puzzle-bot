@@ -41,17 +41,22 @@ export class Mongo {
     return res
   }
 
+  static async getGuild(guildID: string) {
+    const res = await Guild.findOne({ guildID })
+    return res
+  }
+
   static async addCompletionTime(
     guildID: string,
-    gameName: string,
+    gameType: string,
     completionTime: number,
   ) {
     const guild = <IGuild>await Guild.findOne({ guildID })
-    const game = guild.gameCompletionTimes.get(gameName)
+    const game = guild.gameCompletionTimes.get(gameType)
     if (!game) {
-      guild.gameCompletionTimes.set(gameName, [completionTime])
+      guild.gameCompletionTimes.set(gameType, [completionTime])
     } else {
-      guild.gameCompletionTimes.set(gameName, game.concat(completionTime))
+      guild.gameCompletionTimes.set(gameType, game.concat(completionTime))
     }
     const res = await guild.save()
     return res

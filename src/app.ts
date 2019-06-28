@@ -29,7 +29,7 @@ const client = new CommandoClient({
 
 client.registry
   .registerDefaultTypes()
-  .registerGroups([['games', 'Games']])
+  .registerGroups([['games', 'Games'], ['other', 'Other']])
   .registerDefaultGroups()
   .registerDefaultCommands()
   .registerCommandsIn(path.join(__dirname, 'commands'))

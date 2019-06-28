@@ -7,6 +7,7 @@ import { Game, GameStatus } from '../core/game'
 import HANGMAN_WORDS from '../data/hangman-words.json'
 import { chunkArray } from '../utils/helpers'
 import { Draw } from '../utils/draw'
+import { PuzzleLabel } from '../core/puzzle-label'
 
 const HANGMAN_EMOJIS = ['⬅', '⬆', '⬇', '➡', '✅']
 
@@ -46,6 +47,8 @@ export class HangmanGame extends Game {
   }
 
   async generateEmbed(): Promise<RichEmbed> {
+    const title = PuzzleLabel.create('Hangman', this.difficulty, this.gameID)
+
     if (this.ascii) {
       const asciiArt = drawHangmanASCII(
         this.letterTable,
@@ -54,7 +57,7 @@ export class HangmanGame extends Game {
         this.guessedWord,
       )
       return new RichEmbed({
-        title: `Puzzle - Hangman - ${this.gameID}`,
+        title,
         description: asciiArt,
       })
     }
@@ -77,7 +80,7 @@ export class HangmanGame extends Game {
       fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
     this.prevFileName = fileName
     return new RichEmbed({
-      title: `Puzzle - Hangman - ${this.gameID}`,
+      title,
       description:
         'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
       image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
