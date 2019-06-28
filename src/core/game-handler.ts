@@ -51,7 +51,7 @@ export class GameHandler {
     const { message, emoji } = messageReaction
     const guildID = message.guild.id
     const gameData = GameTitle.parse(message.embeds[0].title)
-    const { gameName, gameID, difficulty, isASCII } = gameData
+    const { gameID } = gameData
     const gameInstance = StateManager.getGameInstance(guildID, gameID)
 
     if (gameInstance) {
@@ -63,11 +63,11 @@ export class GameHandler {
       if (status === 'win') {
         const elapsedTime = gameInstance.getElapsedTimeInMilliseconds()
         const timeString = formatElapsedTime(elapsedTime)
-        await Database.addCompletionTime(guildID, gameData, elapsedTime)
         await this.sendGameCompletionPrompt(
           message,
           prompt || `Congratulations, you win! You finished in ${timeString}.`,
         )
+        await Database.addCompletionTime(guildID, gameData, elapsedTime)
         StateManager.removeGameInstance(guildID, gameID)
       } else if (status === 'loss') {
         await this.sendGameCompletionPrompt(
@@ -80,6 +80,7 @@ export class GameHandler {
   }
 
   static async sendGameCompletionPrompt(message: Message, prompt: string) {
+    console.log(prompt)
     await message.edit({
       content: '',
       embed: { title: message.embeds[0].title, description: prompt },

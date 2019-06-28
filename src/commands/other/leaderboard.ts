@@ -79,10 +79,9 @@ function formatCompletionTimes(completionTimes: number[]) {
       if (time < 60000) {
         return `${(time / 1000).toFixed(2)} s`
       }
-      return `${Math.floor(time / 60000).toFixed(2)} min ${(
-        (time / 1000) %
-        60
-      ).toFixed(2)} s`
+      return `${Math.floor(time / 60000)} min ${((time / 1000) % 60).toFixed(
+        2,
+      )} s`
     })
     .filter((time, index) => index < 3)
     .map((time, index) => {
