@@ -1,7 +1,7 @@
 import { RichEmbed } from 'discord.js'
 import rp from 'request-promise'
 
-import { Game, GameStatus } from '../game'
+import { Game, GameStatus } from '../core/game'
 
 const SUDOKU_EMOJIS = [
   '🇦',

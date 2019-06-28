@@ -1,4 +1,5 @@
 import { RichEmbed, Attachment } from 'discord.js'
+import moment from 'moment'
 
 // Object to represent a game. Main functions are update() and
 // generateEmbed(). generateEmbed() is called to create an embed to send
@@ -11,8 +12,11 @@ export interface GameStatus {
 }
 
 export abstract class Game {
-  startTime = Date.now()
+  startTime = moment()
   constructor(public gameID: string) {}
+  getElapsedTimeInMilliseconds(): number {
+    return moment().diff(this.startTime)
+  }
 
   abstract emojis: string[]
   abstract setup(): Promise<void>

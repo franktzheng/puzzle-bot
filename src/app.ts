@@ -2,18 +2,26 @@ import { config } from 'dotenv'
 import path from 'path'
 import express from 'express'
 import { CommandoClient } from 'discord.js-commando'
-import { GameHandler } from './game-handler'
+import signale from 'signale'
+
+import { GameHandler } from './core/game-handler'
+import { Mongo } from './core/mongo'
 
 // add .env file to process.env
 config()
-const { DISCORD_BOT_TOKEN } = process.env
+const { DISCORD_BOT_TOKEN, MONGO_URI } = process.env
 
+// MongoDB connection
+Mongo.connect(MONGO_URI)
+
+// Express server for hosting images
 const app = express()
 const PORT = process.env.PORT || 8080
 app.use(express.static('public'))
-app.get('/', (req, res) => res.send('Test'))
-app.listen(PORT, () => console.log(`App listening on port ${PORT}`))
+app.get('/', (_req, res) => res.send('Test'))
+app.listen(PORT, () => signale.start(`App listening on port ${PORT}`))
 
+// Discord.js client
 const client = new CommandoClient({
   commandPrefix: '?puzzle ',
   owner: ['201552205386350595'], // add your user id here
@@ -26,9 +34,9 @@ client.registry
   .registerDefaultCommands()
   .registerCommandsIn(path.join(__dirname, 'commands'))
 
-client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}! (${client.user.id})`)
-})
+client.once('ready', () =>
+  signale.start(`Logged in as ${client.user.tag}! (${client.user.id})`),
+)
 
 client.on('messageReactionAdd', messageReaction => {
   const { users, message } = messageReaction

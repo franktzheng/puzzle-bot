@@ -1,5 +1,5 @@
 import { Command, CommandoClient, CommandMessage } from 'discord.js-commando'
-import { GameHandler } from '../../game-handler'
+import { GameHandler } from '../../core/game-handler'
 
 export default class MazeCommand extends Command {
   constructor(client: CommandoClient) {

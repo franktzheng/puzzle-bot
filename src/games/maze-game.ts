@@ -4,7 +4,7 @@ import Canvas from 'canvas'
 import fs from 'fs'
 
 import { UnionTree, Draw } from '../utils'
-import { Game, GameStatus } from '../game'
+import { Game, GameStatus } from '../core/game'
 
 interface MazeEdge {
   x: number

@@ -1,6 +1,7 @@
 import { Game } from './game'
-import { SudokuGame, HangmanGame } from './games'
-import { MazeGame } from './games/maze-game'
+import { SudokuGame, HangmanGame } from '../games'
+import { MazeGame } from '../games/maze-game'
+import { Mongo } from './mongo'
 
 interface State {
   gameList: {
@@ -31,13 +32,17 @@ export class StateManager {
     Maze: MazeGame,
   }
 
-  static createGameInstance(
+  static async createGameInstance(
     guildID: string,
     gameName: string,
     args: any = {},
-  ): Game {
+  ): Promise<Game> {
     if (!this.state.gameList[guildID]) {
       this.state.gameList[guildID] = {}
+      const isGuildInDatabase = await Mongo.doesGuildExist(guildID)
+      if (!isGuildInDatabase) {
+        await Mongo.createNewGuild(guildID)
+      }
     }
     const gameID = (this.state.counter++).toString().padStart(8, '0')
     const GameClass = this.gameMap[gameName]

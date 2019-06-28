@@ -3,7 +3,7 @@ import _ from 'lodash'
 import fs from 'fs'
 import Canvas from 'canvas'
 
-import { Game, GameStatus } from '../game'
+import { Game, GameStatus } from '../core/game'
 import HANGMAN_WORDS from '../data/hangman-words.json'
 import { chunkArray } from '../utils/helpers'
 import { Draw } from '../utils/draw'
