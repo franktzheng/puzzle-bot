@@ -23,15 +23,13 @@ app.listen(PORT, () => signale.start(`App listening on port ${PORT}`))
 
 // Discord.js client
 const client = new CommandoClient({
-  commandPrefix: '?puzzle ',
+  commandPrefix: '??',
   owner: ['201552205386350595'], // add your user id here
 })
 
 client.registry
   .registerDefaultTypes()
   .registerGroups([['games', 'Games'], ['other', 'Other']])
-  .registerDefaultGroups()
-  .registerDefaultCommands()
   .registerCommandsIn(path.join(__dirname, 'commands'))
 
 client.once('ready', () =>

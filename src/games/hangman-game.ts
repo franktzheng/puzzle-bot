@@ -46,7 +46,9 @@ export class HangmanGame extends Game {
       )
       return new RichEmbed({
         title,
-        description: asciiArt,
+        description:
+          'Try to guess the unknown word.\n\nTo play the normal version:```??puzzle hangman <difficulty>```\n' +
+          asciiArt,
       })
     }
 
@@ -70,7 +72,7 @@ export class HangmanGame extends Game {
     return new RichEmbed({
       title,
       description:
-        'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
+        'Try to guess the unknown word.\n\nTo play the ASCII version:```??ascii hangman <difficulty>```',
       image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
     })
   }

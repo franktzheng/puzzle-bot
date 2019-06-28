@@ -45,7 +45,9 @@ export class MazeGame extends Game {
       const asciiArt = drawMazeASCII(this.mazeGrid, this.playerCoordinates)
       return new RichEmbed({
         title,
-        description: asciiArt,
+        description:
+          'Try to reach the end of the maze.\n\nTo play the normal version:```??puzzle maze <difficulty>```\n' +
+          asciiArt,
       })
     }
 
@@ -64,7 +66,7 @@ export class MazeGame extends Game {
     return new RichEmbed({
       title,
       description:
-        'Try to reach the end of the maze.\n\nTo play an ASCII version:```?puzzle maze <difficulty> ascii```',
+        'Try to reach the end of the maze.\n\nTo play the ASCII version:```??ascii maze <difficulty>```',
       image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
     })
   }
