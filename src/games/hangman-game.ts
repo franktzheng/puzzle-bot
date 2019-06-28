@@ -1,11 +1,12 @@
 import { RichEmbed } from 'discord.js'
 import _ from 'lodash'
 import fs from 'fs'
+import Canvas from 'canvas'
 
 import { Game, GameStatus } from '../game'
 import HANGMAN_WORDS from '../data/hangman-words.json'
-import { chunkArray } from '../helpers'
-import { Render } from '../utils/render'
+import { chunkArray } from '../utils/helpers'
+import { Draw } from '../utils/draw'
 
 const HANGMAN_EMOJIS = ['⬅', '⬆', '⬇', '➡', '✅']
 
@@ -39,14 +40,14 @@ export class HangmanGame extends Game {
   }
 
   async setup() {
-    this.word = this.getWord(this.difficulty).split('')
+    this.word = getWord(this.difficulty).split('')
     this.guessedWord = [...Array(this.word.length)].map(() => null)
-    this.letterTable = this.generateLetterTable()
+    this.letterTable = generateLetterTable()
   }
 
-  async generateEmbed(): Promise<any> {
+  async generateEmbed(): Promise<RichEmbed> {
     if (!this.ascii) {
-      const buffer = Render.hangman(
+      const buffer = drawHangmanImage(
         _.flatten(this.letterTable),
         this.guessedWord,
         this.numOfWrongAnswers,
@@ -63,50 +64,20 @@ export class HangmanGame extends Game {
       this.prevFileName &&
         fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
       this.prevFileName = fileName
-      return {
-        embed: {
-          title: `Puzzle - Hangman - ${this.gameID}`,
-          description:
-            'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
-          image: {
-            url: `${process.env.BASE_URL}/game-images/${fileName}`,
-          },
-        },
-      }
+      return new RichEmbed({
+        title: `Puzzle - Hangman - ${this.gameID}`,
+        description:
+          'Try to guess the unknown word.\n\nTo play an ASCII version:```?puzzle hangman <difficulty> ascii```',
+        image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
+      })
     }
 
-    let letterTable = '|'
-    for (let r = 0; r < this.letterTable.length; r++) {
-      for (let c = 0; c < this.letterTable[r].length; c++) {
-        const letter = this.letterTable[r][c].isUsed
-          ? '-'
-          : this.letterTable[r][c].value
-        if (r === this.selection[0] && c === this.selection[1]) {
-          letterTable += `-${letter}-|`
-        } else {
-          letterTable += ` ${letter} |`
-        }
-      }
-      letterTable += '\n|'
-    }
-    letterTable = letterTable.slice(0, letterTable.length - 2)
-    const picture = `
-       _________
-      |         |
-      |         ${this.numOfWrongAnswers > 0 ? 'O' : ' '}
-      |        ${this.numOfWrongAnswers > 2 ? '/' : ' '}${
-      this.numOfWrongAnswers > 1 ? '|' : ' '
-    }${this.numOfWrongAnswers > 3 ? '\\' : ' '}
-      |        ${this.numOfWrongAnswers > 4 ? '/' : ' '} ${
-      this.numOfWrongAnswers > 5 ? '\\' : ' '
-    }
-      |
-      |
-  ____|____________`
-    const guessedWord = this.guessedWord
-      .map(letter => (letter ? ` ${letter} ` : '___'))
-      .join(' ')
-    const asciiArt = `\`\`\`\n${letterTable}${picture}\n\n${guessedWord}\`\`\``
+    const asciiArt = drawHangmanASCII(
+      this.letterTable,
+      this.selection,
+      this.numOfWrongAnswers,
+      this.guessedWord,
+    )
     return new RichEmbed({
       title: `Puzzle - Hangman - ${this.gameID}`,
       description: asciiArt,
@@ -176,32 +147,216 @@ export class HangmanGame extends Game {
     }
     selectedLetter.isUsed = true
   }
+}
 
-  getWord(difficulty: number): string {
-    let wordList: string[]
-    switch (difficulty) {
-      case 1:
-        wordList = HANGMAN_WORDS.easy
-        break
-      case 2:
-        wordList = HANGMAN_WORDS.medium
-        break
+function getWord(difficulty: number): string {
+  let wordList: string[]
+  switch (difficulty) {
+    case 1:
+      wordList = HANGMAN_WORDS.easy
+      break
+    case 2:
+      wordList = HANGMAN_WORDS.medium
+      break
 
-      case 3:
-        wordList = HANGMAN_WORDS.hard
-        break
-      default:
-        throw new Error('getWord(): invalid hangman difficulty!')
+    case 3:
+      wordList = HANGMAN_WORDS.hard
+      break
+    default:
+      throw new Error('getWord(): invalid hangman difficulty!')
+  }
+  const word = wordList[Math.floor(Math.random() * wordList.length)]
+  return word
+}
+
+function generateLetterTable(): HangmanLetter[][] {
+  const letters = [...Array(26)]
+    .map((_value, index) => String.fromCharCode(index + 65))
+    .map(letter => ({ value: letter, isUsed: false }))
+  const letterTable = chunkArray(letters, HangmanGame.ROW_SIZE)
+  return letterTable
+}
+
+function drawHangmanASCII(
+  letterTable: HangmanLetter[][],
+  selection: [number, number],
+  numOfWrongAnswers: number,
+  guessedWord: string[],
+): string {
+  let letterTableString = '|'
+  for (let r = 0; r < letterTable.length; r++) {
+    for (let c = 0; c < letterTable[r].length; c++) {
+      const letter = letterTable[r][c].isUsed ? '-' : letterTable[r][c].value
+      if (r === selection[0] && c === selection[1]) {
+        letterTableString += `-${letter}-|`
+      } else {
+        letterTableString += ` ${letter} |`
+      }
     }
-    const word = wordList[Math.floor(Math.random() * wordList.length)]
-    return word
+    letterTableString += '\n|'
+  }
+  letterTableString = letterTableString.slice(0, letterTableString.length - 2)
+  const hangmanString = `
+     _________
+    |         |
+    |         ${numOfWrongAnswers > 0 ? 'O' : ' '}
+    |        ${numOfWrongAnswers > 2 ? '/' : ' '}${
+    numOfWrongAnswers > 1 ? '|' : ' '
+  }${numOfWrongAnswers > 3 ? '\\' : ' '}
+    |        ${numOfWrongAnswers > 4 ? '/' : ' '} ${
+    numOfWrongAnswers > 5 ? '\\' : ' '
+  }
+    |
+    |
+____|____________`
+  const guessedWordString = guessedWord
+    .map(letter => (letter ? ` ${letter} ` : '___'))
+    .join(' ')
+  return `\`\`\`\n${letterTableString}${hangmanString}\n\n${guessedWordString}\`\`\``
+}
+
+function drawHangmanImage(
+  letters: HangmanLetter[],
+  guessedLetters: string[],
+  numOfWrongAnswers: number,
+  selection: [number, number],
+) {
+  const canvas = Canvas.createCanvas(300, 300)
+  const ctx = canvas.getContext('2d')
+
+  // ALPHABET
+
+  ctx.fillStyle = '#2C2F33'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  const tileWidth = 25
+  const tileMargin = 5
+  const tableMargin = 15
+  const numOfColumns = 5
+
+  for (let r = 0; r < letters.length / numOfColumns; r++) {
+    for (
+      let c = 0;
+      c < Math.min(letters.length - r * numOfColumns, numOfColumns);
+      c++
+    ) {
+      const letter = letters[r * numOfColumns + c]
+
+      const x = c * (tileWidth + tileMargin) + tableMargin
+      const y = r * (tileWidth + tileMargin) + tableMargin
+
+      ctx.beginPath()
+      Draw.roundRect(ctx, x, y, tileWidth, tileWidth, tileWidth / 3)
+      ctx.fillStyle =
+        selection[0] === r && selection[1] === c
+          ? letter.isUsed
+            ? '#4f545c'
+            : '#4e5d94'
+          : letter.isUsed
+          ? '#99AAB5'
+          : '#7289DA'
+      ctx.fill()
+      ctx.closePath()
+
+      // letter
+      ctx.fillStyle = 'white'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.font = `bold ${0.5 * tileWidth}px Arial`
+      ctx.fillText(letter.value, x + tileWidth / 2, y + tileWidth / 2)
+    }
   }
 
-  generateLetterTable(): HangmanLetter[][] {
-    const letters = [...Array(26)]
-      .map((_value, index) => String.fromCharCode(index + 65))
-      .map(letter => ({ value: letter, isUsed: false }))
-    const letterTable = chunkArray(letters, HangmanGame.ROW_SIZE)
-    return letterTable
+  // GALLOW
+
+  const gallowThickness = 5
+
+  ctx.fillStyle = '#202225'
+  // left vertical
+  ctx.fillRect(200, 25, gallowThickness, 160)
+  // bottom horizontal
+  ctx.fillRect(180, 185, 45, gallowThickness)
+  // right vertical
+  ctx.fillRect(255, 25, gallowThickness, 30)
+  // top horizontal
+  ctx.fillRect(200, 25, 60, gallowThickness)
+
+  // PERSON
+
+  const bodyMargin = 5
+  const bodyThickness = 1
+  const headRadius = 12
+  const bodyX = 255 + gallowThickness / 2
+
+  if (numOfWrongAnswers > 0) {
+    ctx.fillStyle = '#99AAB5'
+    ctx.strokeStyle = '#99AAB5'
+    ctx.lineWidth = bodyThickness
+    ctx.beginPath()
+    ctx.arc(bodyX, headRadius + 55 + bodyMargin, headRadius, 0, 2 * Math.PI)
+    ctx.fill()
+    ctx.closePath()
   }
+
+  if (numOfWrongAnswers > 1) {
+    ctx.beginPath()
+    ctx.lineTo(bodyX, 2 * headRadius + 55)
+    ctx.lineTo(bodyX, 2 * headRadius + 55 + 30)
+    ctx.stroke()
+    ctx.closePath()
+  }
+
+  if (numOfWrongAnswers > 5) {
+    ctx.beginPath()
+    ctx.lineTo(bodyX, 2 * headRadius + 55 + 30)
+    ctx.lineTo(bodyX + 10, 2 * headRadius + 55 + 30 + 30)
+    ctx.stroke()
+    ctx.closePath()
+  }
+
+  if (numOfWrongAnswers > 4) {
+    ctx.beginPath()
+    ctx.lineTo(bodyX, 2 * headRadius + 55 + 30)
+    ctx.lineTo(bodyX - 10, 2 * headRadius + 55 + 30 + 30)
+    ctx.stroke()
+    ctx.closePath()
+  }
+
+  if (numOfWrongAnswers > 3) {
+    ctx.beginPath()
+    ctx.lineTo(bodyX, 2 * headRadius + 55 + 10)
+    ctx.lineTo(bodyX + 10, 2 * headRadius + 55 + 30)
+    ctx.stroke()
+    ctx.closePath()
+  }
+
+  if (numOfWrongAnswers > 2) {
+    ctx.beginPath()
+    ctx.lineTo(bodyX, 2 * headRadius + 55 + 10)
+    ctx.lineTo(bodyX - 10, 2 * headRadius + 55 + 30)
+    ctx.stroke()
+    ctx.closePath()
+  }
+
+  // GUESSED WORD
+  ctx.fillStyle = '#202225'
+  ctx.fillRect(0, 210, canvas.width, canvas.height - 210)
+
+  const guessedLettersMargin = 15
+  const widthAvailable = canvas.width - guessedLettersMargin * 2
+  const letterWidth = widthAvailable / (1.25 * guessedLetters.length - 0.25)
+  const letterMargin = 0.25 * letterWidth
+  ctx.fillStyle = '#99AAB5'
+  guessedLetters.forEach((letter, index) => {
+    const x = index * (letterWidth + letterMargin) + guessedLettersMargin
+    const y = 210 + (canvas.height - 210) / 2
+    ctx.fillRect(x, y + letterWidth / 2, letterWidth, 4)
+
+    // letter
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
+    ctx.font = `bold ${0.9 * letterWidth}px Arial`
+    ctx.fillText(letter || ' ', x + letterWidth / 2, y + (4 * letterWidth) / 10)
+  })
+  return canvas.toBuffer()
 }

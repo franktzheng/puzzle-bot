@@ -2,7 +2,7 @@ import { CommandMessage } from 'discord.js-commando'
 import { Message, MessageReaction, RichEmbed } from 'discord.js'
 
 import { StateManager } from './state-manager'
-import { getFirstFromPotentialArray } from './helpers'
+import { getFirstFromPotentialArray } from './utils/helpers'
 
 // This class is just here to organize these functions
 export class GameHandler {

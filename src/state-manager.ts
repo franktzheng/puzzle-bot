@@ -1,5 +1,6 @@
 import { Game } from './game'
 import { SudokuGame, HangmanGame } from './games'
+import { MazeGame } from './games/maze-game'
 
 interface State {
   gameList: {
@@ -27,6 +28,7 @@ export class StateManager {
   static gameMap: GameMap = {
     Sudoku: SudokuGame,
     Hangman: HangmanGame,
+    Maze: MazeGame,
   }
 
   static createGameInstance(

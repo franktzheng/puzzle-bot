@@ -78,32 +78,12 @@ export class SudokuGame extends Game {
   }
 
   async setup() {
-    await this.generateBoard(SudokuGame.SIZE, this.difficulty)
+    this.board = await generateBoard(SudokuGame.SIZE, this.difficulty)
   }
 
   // generate image based on current tile and board state
   async generateEmbed(): Promise<RichEmbed> {
-    if (!this.board) {
-      return new RichEmbed({
-        title: `Puzzle - Sudoku - ${this.gameID}`,
-        description: 'Loading game...',
-      })
-    }
-    const [rowNumber, c] = this.userInput
-    const r = String.fromCharCode(64 + rowNumber)
-    const currentSelection = (rowNumber === null ? '?' : r) + ' ' + (c || '?')
-    let boardString = `Current selection: ${currentSelection}\n\n\`\`\` ___________________________________\n|`
-    for (let r = 0; r < SudokuGame.SIZE; r++) {
-      for (let c = 0; c < SudokuGame.SIZE; c++) {
-        const tile = this.board[r][c]
-        boardString += ' '
-        boardString += tile.value || ' '
-        boardString += ' |'
-      }
-      boardString += '\n|___|___|___|___|___|___|___|___|___|\n|'
-    }
-    boardString = boardString.slice(0, boardString.length - 1)
-    boardString += '```'
+    const boardString = drawSudokuASCII(this.userInput, this.board)
     return new RichEmbed({
       title: `Puzzle - Sudoku - ${this.gameID}`,
       description: boardString,
@@ -187,34 +167,56 @@ export class SudokuGame extends Game {
   insertValue([r, c]: [number, number], value: number | null) {
     this.board[r][c] = { value, isUserInput: true }
   }
+}
 
-  async fetchData(difficulty: number): Promise<SudokuAPIResponse> {
-    const res = await rp({
-      url: 'http://www.cs.utep.edu/cheon/ws/sudoku/new/',
-      qs: {
-        size: 9,
-        level: difficulty,
-      },
+async function fetchSudokuData(difficulty: number): Promise<SudokuAPIResponse> {
+  const res = await rp({
+    url: 'http://www.cs.utep.edu/cheon/ws/sudoku/new/',
+    qs: {
+      size: 9,
+      level: difficulty,
+    },
+  })
+  return JSON.parse(res)
+}
+
+async function generateBoard(size: number, difficulty: number) {
+  try {
+    const res = await fetchSudokuData(difficulty)
+    const board: SudokuTile[][] = [...Array(size)].map(_x =>
+      [...Array(size)].map(_y => ({
+        value: null,
+        isUserInput: false,
+      })),
+    )
+    res.squares.forEach(({ x, y, value }) => {
+      board[x][y].value = value
     })
-    return JSON.parse(res)
+    return board
+  } catch (err) {
+    console.log('Error fetching from sudoku api!')
+    throw new Error(err)
   }
+}
 
-  async generateBoard(size: number, difficulty: number) {
-    try {
-      const res = await this.fetchData(difficulty)
-      const board: SudokuTile[][] = [...Array(size)].map(_x =>
-        [...Array(size)].map(_y => ({
-          value: null,
-          isUserInput: false,
-        })),
-      )
-      res.squares.forEach(({ x, y, value }) => {
-        board[x][y].value = value
-      })
-      this.board = board
-    } catch (err) {
-      console.log('Error fetching from sudoku api!')
-      console.error(err)
+function drawSudokuASCII(
+  userInput: [number, number, number],
+  board: SudokuTile[][] | null,
+): string {
+  const [rowNumber, c] = userInput
+  const r = String.fromCharCode(64 + rowNumber)
+  const currentSelection = (rowNumber === null ? '?' : r) + ' ' + (c || '?')
+  let boardString = `Current selection: ${currentSelection}\n\n\`\`\` ___________________________________\n|`
+  for (let r = 0; r < SudokuGame.SIZE; r++) {
+    for (let c = 0; c < SudokuGame.SIZE; c++) {
+      const tile = board[r][c]
+      boardString += ' '
+      boardString += tile.value || ' '
+      boardString += ' |'
     }
+    boardString += '\n|___|___|___|___|___|___|___|___|___|\n|'
   }
+  boardString = boardString.slice(0, boardString.length - 1)
+  boardString += '```'
+  return boardString
 }

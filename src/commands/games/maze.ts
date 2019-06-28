@@ -1,13 +1,13 @@
 import { Command, CommandoClient, CommandMessage } from 'discord.js-commando'
 import { GameHandler } from '../../game-handler'
 
-export default class HangmanCommand extends Command {
+export default class MazeCommand extends Command {
   constructor(client: CommandoClient) {
     super(client, {
-      name: 'hangman',
+      name: 'maze',
       group: 'games',
-      memberName: 'hangman',
-      description: 'Play a game of Hangman.',
+      memberName: 'maze',
+      description: 'Try to solve a maze.',
       args: [
         {
           key: 'difficulty',
@@ -27,12 +27,10 @@ export default class HangmanCommand extends Command {
 
   run(
     message: CommandMessage,
-    { difficulty, mode }: { difficulty: number; mode: string },
+    { difficulty }: { difficulty: number; mode: string },
   ) {
-    const ascii = mode === 'ascii'
-    return GameHandler.handleGameCreation(message, 'Hangman', {
+    return GameHandler.handleGameCreation(message, 'Maze', {
       difficulty,
-      ascii,
     })
   }
 }
