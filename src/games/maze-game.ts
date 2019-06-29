@@ -2,10 +2,10 @@ import _ from 'lodash'
 import { RichEmbed } from 'discord.js'
 import Canvas from 'canvas'
 import fs from 'fs'
+import signale from 'signale'
 
 import { UnionTree, Draw } from '../utils'
 import { Game, GameStatus, GameDifficulty } from '../core/game'
-import { GameTitle } from '../core/game-title'
 
 interface MazeEdge {
   x: number
@@ -76,8 +76,12 @@ export class MazeGame extends Game {
       this.playerCoordinates[0] === this.mazeGrid.length - 1 &&
       this.playerCoordinates[1] === this.mazeGrid[0].length - 1
     ) {
-      this.prevFileName &&
-        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      try {
+        this.prevFileName &&
+          fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      } catch (err) {
+        signale.error(`Error deleting ${this.prevFileName}`)
+      }
       return { status: 'win' }
     }
     return { status: 'pending' }

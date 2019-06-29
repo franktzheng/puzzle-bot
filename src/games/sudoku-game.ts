@@ -2,6 +2,7 @@ import { RichEmbed } from 'discord.js'
 import rp from 'request-promise'
 import Canvas from 'canvas'
 import fs from 'fs'
+import signale from 'signale'
 
 import { Game, GameStatus, GameDifficulty } from '../core/game'
 import { Draw } from '../utils'
@@ -202,6 +203,13 @@ export class SudokuGame extends Game {
           return { status: 'pending' }
         }
       }
+    }
+
+    try {
+      this.prevFileName &&
+        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+    } catch (err) {
+      signale.error(`Error deleting ${this.prevFileName}`)
     }
     return { status: 'win' }
   }

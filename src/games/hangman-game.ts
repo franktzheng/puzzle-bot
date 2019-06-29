@@ -2,6 +2,7 @@ import { RichEmbed } from 'discord.js'
 import _ from 'lodash'
 import fs from 'fs'
 import Canvas from 'canvas'
+import signale from 'signale'
 
 import { Game, GameStatus, GameDifficulty } from '../core/game'
 import HANGMAN_WORDS from '../data/hangman-words.json'
@@ -79,15 +80,23 @@ export class HangmanGame extends Game {
 
   getStatus(): GameStatus {
     if (this.numOfWrongAnswers > 5) {
-      this.prevFileName &&
-        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      try {
+        this.prevFileName &&
+          fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      } catch (err) {
+        signale.error(`Error deleting ${this.prevFileName}`)
+      }
       return {
         status: 'loss',
         prompt: `Sorry, you lose! The word was "${this.word.join('')}".`,
       }
     } else if (this.word.join('') === this.guessedWord.join('')) {
-      this.prevFileName &&
-        fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      try {
+        this.prevFileName &&
+          fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+      } catch (err) {
+        signale.error(`Error deleting ${this.prevFileName}`)
+      }
       return { status: 'win' }
     }
     return { status: 'pending' }
