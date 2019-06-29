@@ -25,6 +25,7 @@ const SUDOKU_EMOJIS = [
   '7⃣',
   '8⃣',
   '9⃣',
+  '⬅',
   '❌',
 ]
 
@@ -111,9 +112,14 @@ export class SudokuGame extends Game {
 
   update(emoji: string): boolean {
     if (this.emojis.includes(emoji)) {
-      if (emoji === '❌') {
+      if (emoji === '⬅') {
         this.inputIndex > 0 && this.inputIndex--
         this.userInput[this.inputIndex] = null
+      } else if (emoji === '❌') {
+        const [c, r] = this.userInput
+        if (c && r) {
+          this.insertValue([c - 1, r - 1], null)
+        }
       } else {
         const value = SUDOKU_EMOJI_MAP[emoji]
         if (this.inputIndex === 0) {
