@@ -199,7 +199,11 @@ export class SudokuGame extends Game {
   }
 
   insertValue([r, c]: [number, number], value: number | null) {
-    if (this.board[r][c] && !this.board[r][c].isUserInput) {
+    if (
+      this.board[r][c] &&
+      this.board[r][c].value &&
+      !this.board[r][c].isUserInput
+    ) {
       return
     }
     this.board[r][c] = { value, isUserInput: true }
