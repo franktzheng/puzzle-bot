@@ -120,6 +120,7 @@ export class SudokuGame extends Game {
         if (c && r) {
           this.insertValue([c - 1, r - 1], null)
           this.userInput = [null, null]
+          this.inputIndex = (this.inputIndex + 1) % 3
         }
       } else {
         const value = SUDOKU_EMOJI_MAP[emoji]
