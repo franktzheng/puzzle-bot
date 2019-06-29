@@ -8,7 +8,7 @@ export default class LeaderboardCommand extends Command {
   constructor(client: CommandoClient) {
     super(client, {
       name: 'leaderboard',
-      group: 'games',
+      group: 'other',
       memberName: 'leaderboard',
       description: 'Show leaderboards for different games!',
     })
