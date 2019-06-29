@@ -32,9 +32,10 @@ client.registry
   .registerGroups([['games', 'Games'], ['other', 'Other']])
   .registerCommandsIn(path.join(__dirname, 'commands'))
 
-client.once('ready', () =>
-  signale.start(`Logged in as ${client.user.tag}! (${client.user.id})`),
-)
+client.once('ready', () => {
+  client.user.setActivity('??help')
+  signale.start(`Logged in as ${client.user.tag}! (${client.user.id})`)
+})
 
 client.on('messageReactionAdd', messageReaction => {
   const { users, message } = messageReaction
