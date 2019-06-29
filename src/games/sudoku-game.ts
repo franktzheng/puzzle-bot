@@ -65,7 +65,7 @@ export class SudokuGame extends Game {
   static readonly SIZE = 9
 
   emojis = SUDOKU_EMOJIS
-  name = 'Maze'
+  name = 'Sudoku'
 
   board: SudokuTile[][] | null = null
   userInput: [number, number] = [null, null]
