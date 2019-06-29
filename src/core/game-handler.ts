@@ -56,10 +56,6 @@ export class GameHandler {
 
     if (gameInstance) {
       const shouldRerender = gameInstance.update(emoji.name)
-      if (shouldRerender) {
-        const embed = await gameInstance.generateEmbed()
-        message.edit(embed)
-      }
 
       const { status, prompt } = gameInstance.getStatus()
       if (status === 'win') {
@@ -79,6 +75,9 @@ export class GameHandler {
         )
         StateManager.removeGameInstance(guildID, gameID)
         signale.fav(`${gameName} game with id ${gameID} ended in a loss!`)
+      } else if (shouldRerender) {
+        const embed = await gameInstance.generateEmbed()
+        message.edit(embed)
       }
     }
   }
