@@ -11,7 +11,7 @@ A bot that let's you play puzzle games from right within Discord! Puzzle bot use
   <img src="https://cdn.discordapp.com/attachments/592795928423825422/594314738268241931/maze_00000002_7632717.png" alt="Maze" />
 </p>
 
-Add the bot to your server with [this link](https://discordapp.com/api/oauth2/authorize?client_id=592782977327562987&permissions=11328&scope=bot).
+Add the bot to your server with [this link](https://discordapp.com/api/oauth2/authorize?client_id=592782977327562987&permissions=11328&scope=bot). Alternatively, you can join our test server [here](https://discord.gg/Y5ZxfdA).
 
 ## Commands
 
