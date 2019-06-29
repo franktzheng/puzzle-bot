@@ -93,7 +93,7 @@ export class HangmanGame extends Game {
     return { status: 'pending' }
   }
 
-  update(emoji: string) {
+  update(emoji: string): boolean {
     const [r, c] = this.selection
     const rowSize = this.letterTable[r].length
     const columnSize = this.letterTable[this.letterTable.length - 1][c]
@@ -116,6 +116,7 @@ export class HangmanGame extends Game {
         this.selectLetter(this.selection)
         break
     }
+    return true
   }
 
   selectLetter([r, c]: [number, number]) {

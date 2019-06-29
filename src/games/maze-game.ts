@@ -83,31 +83,40 @@ export class MazeGame extends Game {
     return { status: 'pending' }
   }
 
-  update(emoji: string) {
+  update(emoji: string): boolean {
     const [r, c] = this.playerCoordinates
     const [numOfRows, numOfColumns] = this.size
     switch (emoji) {
       case '⬅':
         if (c !== 0 && !this.mazeGrid[r][c - 1].fillRight) {
           this.playerCoordinates[1] = c - 1
+        } else {
+          return false
         }
         break
       case '⬆':
         if (r !== 0 && !this.mazeGrid[r - 1][c].fillBottom) {
           this.playerCoordinates[0] = r - 1
+        } else {
+          return false
         }
         break
       case '⬇':
         if (!this.mazeGrid[r][c].fillBottom && r !== numOfColumns - 1) {
           this.playerCoordinates[0] = r + 1
+        } else {
+          return false
         }
         break
       case '➡':
         if (!this.mazeGrid[r][c].fillRight && c !== numOfColumns - 1) {
           this.playerCoordinates[1] = c + 1
+        } else {
+          return false
         }
         break
     }
+    return true
   }
 }
 

@@ -51,13 +51,15 @@ export class GameHandler {
     const { message, emoji } = messageReaction
     const guildID = message.guild.id
     const gameData = GameTitle.parse(message.embeds[0].title)
-    const { gameID } = gameData
+    const { gameName, gameID } = gameData
     const gameInstance = StateManager.getGameInstance(guildID, gameID)
 
     if (gameInstance) {
-      gameInstance.update(emoji.name)
-      const embed = await gameInstance.generateEmbed()
-      message.edit(embed)
+      const shouldRerender = gameInstance.update(emoji.name)
+      if (shouldRerender) {
+        const embed = await gameInstance.generateEmbed()
+        message.edit(embed)
+      }
 
       const { status, prompt } = gameInstance.getStatus()
       if (status === 'win') {
@@ -69,18 +71,19 @@ export class GameHandler {
         )
         await Database.addCompletionTime(guildID, gameData, elapsedTime)
         StateManager.removeGameInstance(guildID, gameID)
+        signale.fav(`${gameName} game with id ${gameID} ended in a win!`)
       } else if (status === 'loss') {
         await this.sendGameCompletionPrompt(
           message,
           prompt || 'Sorry, you lose!',
         )
         StateManager.removeGameInstance(guildID, gameID)
+        signale.fav(`${gameName} game with id ${gameID} ended in a loss!`)
       }
     }
   }
 
   static async sendGameCompletionPrompt(message: Message, prompt: string) {
-    console.log(prompt)
     await message.edit({
       content: '',
       embed: { title: message.embeds[0].title, description: prompt },

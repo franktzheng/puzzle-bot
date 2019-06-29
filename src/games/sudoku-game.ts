@@ -109,7 +109,7 @@ export class SudokuGame extends Game {
     })
   }
 
-  update(emoji: string) {
+  update(emoji: string): boolean {
     if (this.emojis.includes(emoji)) {
       if (emoji === '❌') {
         this.inputIndex > 0 && this.inputIndex--
@@ -120,13 +120,13 @@ export class SudokuGame extends Game {
           if (typeof value === 'string') {
             this.userInput[this.inputIndex] = value.charCodeAt(0) - 64
           } else {
-            return
+            return false
           }
         } else if (this.inputIndex === 1) {
           if (typeof value !== 'string') {
             this.userInput[this.inputIndex] = value
           } else {
-            return
+            return false
           }
         } else if (this.inputIndex === 2) {
           if (typeof value !== 'string') {
@@ -134,11 +134,12 @@ export class SudokuGame extends Game {
             this.insertValue([c - 1, r - 1], value)
             this.userInput = [null, null]
           } else {
-            return
+            return false
           }
         }
         this.inputIndex = (this.inputIndex + 1) % 3
       }
+      return true
     }
   }
 
@@ -198,6 +199,9 @@ export class SudokuGame extends Game {
   }
 
   insertValue([r, c]: [number, number], value: number | null) {
+    if (this.board[r][c] && !this.board[r][c].isUserInput) {
+      return
+    }
     this.board[r][c] = { value, isUserInput: true }
   }
 }
@@ -313,7 +317,11 @@ function drawSudokuImage(board: SudokuTile[][], userInput: [number, number]) {
           : c === 0
           ? String.fromCharCode(r + 64)
           : board[r - 1][c - 1].value || ' '
-      ctx.fillStyle = r === rowNumber && c === columnNumber ? 'black' : 'white'
+      ctx.fillStyle =
+        (r === rowNumber && c === columnNumber) ||
+        (r !== 0 && c !== 0 && board[r - 1][c - 1].isUserInput)
+          ? 'black'
+          : 'white'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.font = `bold ${0.75 * tileWidth}px Arial`

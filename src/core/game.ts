@@ -54,7 +54,7 @@ export abstract class Game {
   abstract emojis: string[]
   abstract setup(): Promise<void>
   abstract async generateEmbed(): Promise<any>
-  abstract update(emoji: string): void
+  abstract update(emoji: string): boolean
   abstract getStatus(): GameStatus
 }
 
