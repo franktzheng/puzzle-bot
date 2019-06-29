@@ -5,10 +5,10 @@
 _Built for Discord Hack Week 2019_
 
 A bot that let's you play puzzle games from right within Discord! Puzzle bot uses *reactions* 😜👌 to get your input, so it feels just like you're playing an actual game. Challenge your friends and compete for the top spot on the leaderboards.
-
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/592795928423825422/594315012345036811/hangman_00000001_652262.png" alt="Hangman" />
-  <img src="https://cdn.discordapp.com/attachments/592795928423825422/594314738268241931/maze_00000002_7632717.png" alt="Maze" />
+  <img width="200" height="200" src="https://cdn.discordapp.com/attachments/592795928423825422/594406079614418954/sudoku_00000000_1243132.png" alt="Hangman" />
+  <img width="200" height="200" src="https://cdn.discordapp.com/attachments/592795928423825422/594315012345036811/hangman_00000001_652262.png" alt="Hangman" />
+  <img width="200" height="200" src="https://cdn.discordapp.com/attachments/592795928423825422/594314738268241931/maze_00000002_7632717.png" alt="Maze" />
 </p>
 
 Add the bot to your server with [this link](https://discordapp.com/api/oauth2/authorize?client_id=592782977327562987&permissions=11328&scope=bot). Alternatively, you can join our test server [here](https://discord.gg/Y5ZxfdA).
