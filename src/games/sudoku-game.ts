@@ -1,8 +1,10 @@
 import { RichEmbed } from 'discord.js'
 import rp from 'request-promise'
+import Canvas from 'canvas'
+import fs from 'fs'
 
 import { Game, GameStatus, GameDifficulty } from '../core/game'
-import { GameTitle } from '../core/game-title'
+import { Draw } from '../utils'
 
 const SUDOKU_EMOJIS = [
   '🇦',
@@ -26,16 +28,16 @@ const SUDOKU_EMOJIS = [
   '❌',
 ]
 
-const SUDOKU_EMOJI_MAP: { [emoji: string]: number } = {
-  '🇦': 1,
-  '🇧': 2,
-  '🇨': 3,
-  '🇩': 4,
-  '🇪': 5,
-  '🇫': 6,
-  '🇬': 7,
-  '🇭': 8,
-  '🇮': 9,
+const SUDOKU_EMOJI_MAP: { [emoji: string]: number | string } = {
+  '🇦': 'A',
+  '🇧': 'B',
+  '🇨': 'C',
+  '🇩': 'D',
+  '🇪': 'E',
+  '🇫': 'F',
+  '🇬': 'G',
+  '🇭': 'H',
+  '🇮': 'I',
   '1⃣': 1,
   '2⃣': 2,
   '3⃣': 3,
@@ -65,8 +67,9 @@ export class SudokuGame extends Game {
   name = 'Maze'
 
   board: SudokuTile[][] | null = null
-  userInput: [number, number, number] = [null, null, null]
+  userInput: [number, number] = [null, null]
   inputIndex = 0
+  prevFileName: string = null
 
   async setup() {
     this.board = await generateBoard(SudokuGame.SIZE, this.difficulty)
@@ -75,10 +78,34 @@ export class SudokuGame extends Game {
   // generate image based on current tile and board state
   async generateEmbed(): Promise<RichEmbed> {
     const title = this.createGameTitle()
-    const boardString = drawSudokuASCII(this.userInput, this.board)
+
+    if (this.isASCII) {
+      const asciiArt = drawSudokuASCII(this.board, this.userInput)
+      return new RichEmbed({
+        title,
+        description:
+          'Fill in the digits.\n\nTo play the Normal version:```??puzzle sudoku <difficulty>```\n' +
+          asciiArt,
+      })
+    }
+
+    const buffer = drawSudokuImage(this.board, this.userInput)
+    const fileName = `sudoku_${this.gameID}_${Math.floor(
+      Math.random() * 10000000,
+    )}.png`
+    if (!fs.existsSync('./public/game-images')) {
+      fs.mkdirSync('./public')
+      fs.mkdirSync('./public/game-images')
+    }
+    fs.writeFileSync(`./public/game-images/${fileName}`, buffer)
+    this.prevFileName &&
+      fs.unlinkSync(`./public/game-images/${this.prevFileName}`)
+    this.prevFileName = fileName
     return new RichEmbed({
       title,
-      description: boardString,
+      description:
+        'Fill in the digits.\n\nTo play the ASCII version:```??ascii sudoku <difficulty>```',
+      image: { url: `${process.env.BASE_URL}/game-images/${fileName}` },
     })
   }
 
@@ -89,13 +116,27 @@ export class SudokuGame extends Game {
         this.userInput[this.inputIndex] = null
       } else {
         const value = SUDOKU_EMOJI_MAP[emoji]
-        this.userInput[this.inputIndex] = value
-        if (this.inputIndex === 2) {
-          const [c, r, value] = this.userInput
-          this.insertValue([c - 1, r - 1], value)
-          this.userInput = [null, null, null]
+        if (this.inputIndex === 0) {
+          if (typeof value === 'string') {
+            this.userInput[this.inputIndex] = value.charCodeAt(0) - 64
+          } else {
+            return
+          }
+        } else if (this.inputIndex === 1) {
+          if (typeof value !== 'string') {
+            this.userInput[this.inputIndex] = value
+          } else {
+            return
+          }
+        } else if (this.inputIndex === 2) {
+          if (typeof value !== 'string') {
+            const [c, r] = this.userInput
+            this.insertValue([c - 1, r - 1], value)
+            this.userInput = [null, null]
+          } else {
+            return
+          }
         }
-        // if input index is 2, reset it to 0
         this.inputIndex = (this.inputIndex + 1) % 3
       }
     }
@@ -195,23 +236,93 @@ async function generateBoard(size: number, difficulty: GameDifficulty) {
 }
 
 function drawSudokuASCII(
-  userInput: [number, number, number],
   board: SudokuTile[][] | null,
+  userInput: [number, number],
 ): string {
   const [rowNumber, c] = userInput
   const r = String.fromCharCode(64 + rowNumber)
-  const currentSelection = (rowNumber === null ? '?' : r) + ' ' + (c || '?')
-  let boardString = `Current selection: ${currentSelection}\n\n\`\`\` ___________________________________\n|`
+  const currentSelection = (rowNumber === null ? '?' : r) + (c || '?')
+  let boardString = `\`\`\`Current selection: ${currentSelection}\n\n    A B C   D E F   G H I  \n  +-------+-------+-------+\n1 |`
   for (let r = 0; r < SudokuGame.SIZE; r++) {
     for (let c = 0; c < SudokuGame.SIZE; c++) {
       const tile = board[r][c]
       boardString += ' '
       boardString += tile.value || ' '
-      boardString += ' |'
+      if (c % 3 === 2) {
+        boardString += ' |'
+      }
     }
-    boardString += '\n|___|___|___|___|___|___|___|___|___|\n|'
+    const nextRowNumber = r + 2
+    if (r % 3 === 2) {
+      boardString += `\n  +-------+-------+-------+\n${nextRowNumber} |`
+    } else {
+      boardString += `\n${nextRowNumber} |`
+    }
   }
-  boardString = boardString.slice(0, boardString.length - 1)
+  boardString = boardString.slice(0, boardString.length - 4)
   boardString += '```'
   return boardString
+}
+
+function drawSudokuImage(board: SudokuTile[][], userInput: [number, number]) {
+  const canvas = Canvas.createCanvas(300, 300)
+  const ctx = canvas.getContext('2d')
+
+  const [rowNumber, columnNumber] = userInput
+
+  ctx.fillStyle = '#2C2F33'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  const bottomMargin = 10
+
+  const numOfColumns = board[0].length + 1
+  const numOfRows = board.length + 1
+  const width = canvas.width
+  const height = canvas.height - bottomMargin
+  const xMargin = (width - height) / 2
+  const size = height / numOfRows
+  const tileWidth = 18
+
+  for (let r = 0; r < numOfRows; r++) {
+    for (let c = 0; c < numOfColumns; c++) {
+      const x = c * size + xMargin + (size - tileWidth) / 2 - 5
+      const y = r * size + (size - tileWidth) / 2
+
+      if (r > 0 && c > 0) {
+        ctx.fillStyle =
+          r === rowNumber && c === columnNumber
+            ? '#ffffff'
+            : (Math.floor((r - 1) / 3) + Math.floor((c - 1) / 3)) % 2 === 0
+            ? r === rowNumber || c === columnNumber
+              ? '#A2A6AD'
+              : '#7289DA'
+            : r === rowNumber || c === columnNumber
+            ? '#696F79'
+            : '#4e5d94'
+        ctx.beginPath()
+        Draw.roundRect(ctx, x, y, tileWidth, tileWidth, 5)
+        ctx.fill()
+        ctx.closePath()
+      }
+
+      const symbol =
+        r === 0 && c === 0
+          ? ' '
+          : r === 0
+          ? c
+          : c === 0
+          ? String.fromCharCode(r + 64)
+          : board[r - 1][c - 1].value || ' '
+      ctx.fillStyle = r === rowNumber && c === columnNumber ? 'black' : 'white'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.font = `bold ${0.75 * tileWidth}px Arial`
+      ctx.fillText(
+        symbol.toString(),
+        x + tileWidth / 2 + (c === 0 ? 5 : 0),
+        y + tileWidth / 2 + 1 + (r === 0 ? 5 : 0),
+      )
+    }
+  }
+  return canvas.toBuffer()
 }
