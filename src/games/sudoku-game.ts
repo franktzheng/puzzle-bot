@@ -242,7 +242,7 @@ function drawSudokuASCII(
   const [rowNumber, c] = userInput
   const r = String.fromCharCode(64 + rowNumber)
   const currentSelection = (rowNumber === null ? '?' : r) + (c || '?')
-  let boardString = `\`\`\`Current selection: ${currentSelection}\n\n    A B C   D E F   G H I  \n  +-------+-------+-------+\n1 |`
+  let boardString = `\`\`\`Current selection: ${currentSelection}\n\n    1 2 3   4 5 6   7 8 9  \n  +-------+-------+-------+\nA |`
   for (let r = 0; r < SudokuGame.SIZE; r++) {
     for (let c = 0; c < SudokuGame.SIZE; c++) {
       const tile = board[r][c]
@@ -252,11 +252,11 @@ function drawSudokuASCII(
         boardString += ' |'
       }
     }
-    const nextRowNumber = r + 2
+    const nextRowLetter = String.fromCharCode(r + 66)
     if (r % 3 === 2) {
-      boardString += `\n  +-------+-------+-------+\n${nextRowNumber} |`
+      boardString += `\n  +-------+-------+-------+\n${nextRowLetter} |`
     } else {
-      boardString += `\n${nextRowNumber} |`
+      boardString += `\n${nextRowLetter} |`
     }
   }
   boardString = boardString.slice(0, boardString.length - 4)
